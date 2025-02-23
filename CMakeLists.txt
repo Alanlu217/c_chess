@@ -18,3 +18,5 @@ target_include_directories(chess PRIVATE
     "include/"
     "vendor/raylib/src/"
 )
+
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
