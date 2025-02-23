@@ -1,3 +1,6 @@
 [submodule "vendor/raylib"]
 	path = vendor/raylib
 	url = https://github.com/raysan5/raylib
+[submodule "vendor/tomlc99"]
+	path = vendor/tomlc99
+	url = https://github.com/cktan/tomlc99
