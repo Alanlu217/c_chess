@@ -21,6 +21,8 @@ typedef struct {
         Vector2 black_queen;
         Vector2 black_king;
     } piece_offsets;
+
+    Color button_color;
 } Conf;
 
 int conf_load(Conf *conf);

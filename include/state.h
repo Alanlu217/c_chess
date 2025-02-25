@@ -21,18 +21,28 @@ typedef enum {
     NONE = 12,
 } Piece;
 
+typedef enum {
+    START_MENU,
+    GAME,
+    END_MENU,
+} Scene;
+
 typedef struct {
     Conf conf;
 
+    Scene scene;
+
     int window_x, window_y;
-
     Vector2 win_offset;
-
     int win_size;
 
     // [row][col]
     // [0][0] is bottom left, on white side.
     Piece board[8][8];
+
+    struct {
+
+    } start_screen;
 
     struct {
         Texture2D board_texture;
@@ -41,4 +51,5 @@ typedef struct {
             Texture2D pawn, bishop, knight, rook, queen, king;
         } white, black;
     } textures;
+
 } GameState;

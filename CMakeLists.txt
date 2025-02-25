@@ -13,8 +13,8 @@ add_executable(chess
     "src/main.c"
     "src/conf.c"
     "src/win.c"
-    "src/rendering.c"
-    "src/board_logic.c"
+    "src/screens/game_screen.c"
+    "src/screens/button.c"
 )
 
 target_link_libraries(chess raylib toml-c)

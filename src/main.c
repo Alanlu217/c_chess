@@ -1,13 +1,16 @@
-#include "board_logic.h"
 #include "conf.h"
 #include "raylib.h"
-#include "rendering.h"
+#include "screens/button.h"
+#include "screens/game_screen.h"
 #include "state.h"
 #include "win.h"
+#include <stdio.h>
 
 int main() {
     GameState state;
     reset_board(&state);
+
+    state.scene = START_MENU;
 
     state.window_x = 1000;
     state.window_y = 1000;
@@ -33,7 +36,20 @@ int main() {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        draw_board(&state);
+        switch (state.scene) {
+        case START_MENU:
+            Button b = {.pos = (Vector2){.x = 10, .y = 10},
+                        .size = (Vector2){.x = 100, .y = 50}};
+
+            button_draw(&b, &state.conf);
+
+            break;
+        case GAME:
+            draw_board(&state);
+            break;
+        case END_MENU:
+            break;
+        }
 
         EndDrawing();
     }

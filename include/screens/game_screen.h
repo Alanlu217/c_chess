@@ -1,7 +1,6 @@
-#pragma once
-
-#include "raylib.h"
 #include "state.h"
+
+void reset_board(GameState *state);
 
 void load_textures(GameState *state);
 
