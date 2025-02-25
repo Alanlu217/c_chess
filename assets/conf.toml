@@ -1,0 +1,20 @@
+[board]
+padding_pc = 0.1
+edge_padding = 1.5
+piece_scale = 0.004
+
+[white_piece_offsets]
+pawn = { x = 0.0055, y = 0 }
+bishop = { x = 0.0015, y = 0 }
+knight = { x = 0.0015, y = 0 }
+rook = { x = 0.007, y = -0.003 }
+queen = { x = 0, y = 0 }
+king = { x = 0, y = 0 }
+
+[black_piece_offsets]
+pawn = { x = 0.005, y = 0 }
+bishop = { x = 0.002, y = 0 }
+knight = { x = 0.002, y = 0 }
+rook = { x = 0.0075, y = -0.005 }
+queen = { x = 0.003, y = -0.001 }
+king = { x = 0, y = 0 }

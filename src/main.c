@@ -1,20 +1,44 @@
-#include <stdio.h>
-
+#include "board_logic.h"
+#include "conf.h"
 #include "raylib.h"
+#include "rendering.h"
+#include "state.h"
+#include "win.h"
 
 int main() {
-  printf("Hi!\n");
+    GameState state;
+    reset_board(&state);
 
-  InitWindow(800, 600, "Test");
+    state.window_x = 1000;
+    state.window_y = 1000;
 
-  while (!WindowShouldClose()) {
-    BeginDrawing();
-    ClearBackground(BLACK);
+    conf_load(&state.conf);
 
-    EndDrawing();
-  }
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(state.window_x, state.window_y, "chess");
+    SetExitKey(KEY_NULL);
 
-  CloseWindow();
+    load_textures(&state);
 
-  return 0;
+    update_window_state(&state);
+
+    while (!WindowShouldClose()) {
+        if (IsKeyPressed(KEY_BACKSLASH)) {
+            conf_load(&state.conf);
+            TraceLog(LOG_INFO, "Updated config");
+        }
+
+        update_window_state(&state);
+
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        draw_board(&state);
+
+        EndDrawing();
+    }
+
+    CloseWindow();
+
+    return 0;
 }
