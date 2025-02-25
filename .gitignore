@@ -5,3 +5,7 @@ out
 Taskfile.yml
 
 .cache
+
+.clang-format
+
+.clangd
