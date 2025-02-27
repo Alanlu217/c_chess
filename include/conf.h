@@ -22,7 +22,12 @@ typedef struct {
         Vector2 black_king;
     } piece_offsets;
 
-    Color button_color;
+    struct {
+        Color color;
+        Color outline_color;
+
+        float outline_width;
+    } button;
 } Conf;
 
 int conf_load(Conf *conf);

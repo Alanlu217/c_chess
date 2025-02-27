@@ -6,7 +6,7 @@ void load_textures(GameState *state);
 
 float calc_game_padding(const GameState *state);
 
-Vector2 piece_coords_to_win(const GameState *state, int row, int col);
+Vector2 piece_coords_to_game(const GameState *state, int row, int col);
 
 void draw_pieces(const GameState *state);
 

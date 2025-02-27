@@ -2,6 +2,7 @@
 
 #include "conf.h"
 #include "raylib.h"
+#include <stdbool.h>
 
 typedef enum {
     WHITE_PAWN = 0,
@@ -39,6 +40,8 @@ typedef struct {
     // [row][col]
     // [0][0] is bottom left, on white side.
     Piece board[8][8];
+
+    bool white_to_move;
 
     struct {
 

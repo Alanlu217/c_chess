@@ -30,6 +30,8 @@ void reset_board(GameState *state) {
     state->board[7][5] = BLACK_BISHOP;
     state->board[7][6] = BLACK_KNIGHT;
     state->board[7][7] = BLACK_ROOK;
+
+    state->white_to_move = true;
 }
 
 void load_textures(GameState *state) {
@@ -54,10 +56,14 @@ float calc_game_padding(const GameState *state) {
     return state->win_size * state->conf.game_padding_percent;
 }
 
-Vector2 piece_coords_to_win(const GameState *state, int row, int col) {
+Vector2 piece_coords_to_game(const GameState *state, int row, int col) {
     const float game_padding = calc_game_padding(state);
     const float board_padding = state->conf.board_padding * state->win_size /
                                 state->textures.board_texture.height;
+
+    if (state->white_to_move) {
+        row = 7 - row;
+    }
 
     const float square_size =
         (state->win_size - game_padding * 2 - board_padding * 2) / 8;
@@ -66,18 +72,6 @@ Vector2 piece_coords_to_win(const GameState *state, int row, int col) {
                                    col * square_size + 0.5 * square_size,
                               .y = game_padding + board_padding +
                                    row * square_size + 0.5 * square_size};
-
-    // DrawLine(state->win_offset.x, state->win_offset.y + final.y,
-    //          state->win_offset.x + game_padding + board_padding,
-    //          state->win_offset.y + final.y, BLUE);
-
-    // Vector2 win = game_to_win(state, final);
-
-    // DrawRectangleLinesEx((Rectangle){.width = square_size,
-    //                                  .height = square_size,
-    //                                  .x = win.x - square_size / 2,
-    //                                  .y = win.y - square_size / 2},
-    //                      1, GREEN);
 
     return final;
 }
@@ -142,7 +136,7 @@ void draw_pieces(const GameState *state) {
             }
 
             const Vector2 pos =
-                game_to_win(state, piece_coords_to_win(state, row, col));
+                game_to_win(state, piece_coords_to_game(state, row, col));
 
             float scale = (float)state->win_size * state->conf.piece_scale;
 

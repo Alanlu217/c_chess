@@ -183,29 +183,64 @@ int conf_load(Conf *conf) {
 
     toml_table_t *button = toml_table_table(tb, "button");
 
-    toml_value_t r = toml_table_int(button, "r");
+    toml_table_t *button_color = toml_table_table(button, "color");
+
+    toml_value_t r = toml_table_int(button_color, "r");
     if (!r.ok) {
         return 1;
     }
-    conf->button_color.r = r.u.i;
+    conf->button.color.r = r.u.i;
 
-    toml_value_t g = toml_table_int(button, "g");
+    toml_value_t g = toml_table_int(button_color, "g");
     if (!g.ok) {
         return 1;
     }
-    conf->button_color.g = g.u.i;
+    conf->button.color.g = g.u.i;
 
-    toml_value_t b = toml_table_int(button, "b");
+    toml_value_t b = toml_table_int(button_color, "b");
     if (!b.ok) {
         return 1;
     }
-    conf->button_color.b = b.u.i;
+    conf->button.color.b = b.u.i;
 
-    toml_value_t a = toml_table_int(button, "a");
+    toml_value_t a = toml_table_int(button_color, "a");
     if (!a.ok) {
         return 1;
     }
-    conf->button_color.a = a.u.i;
+    conf->button.color.a = a.u.i;
+
+    toml_table_t *button_outline_color =
+        toml_table_table(button, "outline_color");
+
+    r = toml_table_int(button_outline_color, "r");
+    if (!r.ok) {
+        return 1;
+    }
+    conf->button.outline_color.r = r.u.i;
+
+    g = toml_table_int(button_outline_color, "g");
+    if (!g.ok) {
+        return 1;
+    }
+    conf->button.outline_color.g = g.u.i;
+
+    b = toml_table_int(button_outline_color, "b");
+    if (!b.ok) {
+        return 1;
+    }
+    conf->button.outline_color.b = b.u.i;
+
+    a = toml_table_int(button_outline_color, "a");
+    if (!a.ok) {
+        return 1;
+    }
+    conf->button.outline_color.a = a.u.i;
+
+    toml_value_t button_outline_width = toml_table_double(button, "width");
+    if (!button_outline_width.ok) {
+        return 1;
+    }
+    conf->button.outline_width = button_outline_width.u.d;
 
     toml_free(tb);
 

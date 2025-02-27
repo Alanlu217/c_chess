@@ -4,7 +4,6 @@
 #include "screens/game_screen.h"
 #include "state.h"
 #include "win.h"
-#include <stdio.h>
 
 int main() {
     GameState state;
@@ -15,7 +14,9 @@ int main() {
     state.window_x = 1000;
     state.window_y = 1000;
 
-    conf_load(&state.conf);
+    if (conf_load(&state.conf) != 0) {
+        return 1;
+    }
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(state.window_x, state.window_y, "chess");
@@ -25,9 +26,16 @@ int main() {
 
     update_window_state(&state);
 
+    Button b = {.text = "Start!",
+                .pos = (Vector2){.x = 0.5, .y = 0.5},
+                .size = (Vector2){.x = 0.3, .y = 0.05}};
+
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_BACKSLASH)) {
-            conf_load(&state.conf);
+            if (conf_load(&state.conf) != 0) {
+                CloseWindow();
+                return 1;
+            }
             TraceLog(LOG_INFO, "Updated config");
         }
 
@@ -38,14 +46,18 @@ int main() {
 
         switch (state.scene) {
         case START_MENU:
-            Button b = {.pos = (Vector2){.x = 10, .y = 10},
-                        .size = (Vector2){.x = 100, .y = 50}};
+            button_draw(&b, &state);
 
-            button_draw(&b, &state.conf);
-
+            if (button_pressed(&b, &state)) {
+                state.scene = GAME;
+            }
             break;
         case GAME:
             draw_board(&state);
+
+            if (IsKeyPressed(KEY_R)) {
+                state.white_to_move = !state.white_to_move;
+            }
             break;
         case END_MENU:
             break;
