@@ -26,9 +26,13 @@ typedef enum Piece {
     NONE = 12,
 } Piece;
 
+typedef struct PieceLocation {
+    int row, col;
+} PieceLocation;
+
 typedef struct PieceSelection {
     Piece piece;
-    int row, col;
+    PieceLocation pos;
 } PieceSelection;
 
 typedef enum {

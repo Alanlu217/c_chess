@@ -196,11 +196,13 @@ void draw_board(const GameState *state) {
 
 void select_piece(GameState *state, Piece piece, int row, int col) {
     state->selected_piece.piece = state->board[row][col];
-    state->selected_piece.row = row;
-    state->selected_piece.col = col;
+    state->selected_piece.pos.row = row;
+    state->selected_piece.pos.col = col;
 
     state->is_piece_selected = true;
 }
+
+void deselect(GameState *state) { state->is_piece_selected = false; }
 
 void game_screen_init(GameState *state) {
     reset_board(state);
@@ -225,19 +227,82 @@ void load_textures(GameState *state) {
     state->textures.white.king = LoadTexture("assets/white_king.png");
 }
 
-void game_screen_update(GameState *state) {
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        Vector2 mouse_pos = GetMousePosition();
+bool is_white(Piece piece) {
+    switch (piece) {
+    case WHITE_PAWN:
+    case WHITE_BISHOP:
+    case WHITE_KNIGHT:
+    case WHITE_ROOK:
+    case WHITE_QUEEN:
+    case WHITE_KING:
+        return true;
+        break;
+    default:
+        return false;
+        break;
+    }
+}
 
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                if (CheckCollisionPointRec(
-                        mouse_pos,
-                        piece_coords_to_bounding_box(state, row, col))) {
-                    select_piece(state, state->board[row][col], row, col);
+bool is_black(Piece piece) {
+    switch (piece) {
+    case BLACK_PAWN:
+    case BLACK_BISHOP:
+    case BLACK_KNIGHT:
+    case BLACK_ROOK:
+    case BLACK_QUEEN:
+    case BLACK_KING:
+        return true;
+        break;
+    default:
+        return false;
+        break;
+    }
+}
+
+bool is_move_valid(Piece piece, PieceLocation start, PieceLocation end) {}
+
+void move_piece(GameState *state, PieceLocation pos) {
+    if (state->board[pos.row][pos.col] == NONE) {
+        state->board[state->selected_piece.pos.row]
+                    [state->selected_piece.pos.col] = NONE;
+        state->board[pos.row][pos.col] = state->selected_piece.piece;
+        state->is_piece_selected = false;
+        state->white_to_move = !state->white_to_move;
+    }
+}
+
+void update_selection(GameState *state) {
+    Vector2 mouse_pos = GetMousePosition();
+
+    for (int row = 0; row < ROWS; row++) {
+        for (int col = 0; col < COLS; col++) {
+            if (CheckCollisionPointRec(
+                    mouse_pos, piece_coords_to_bounding_box(state, row, col))) {
+
+                if (state->is_piece_selected) {
+                    move_piece(state, (PieceLocation){row, col});
+                    break;
                 }
+
+                if (state->board[row][col] == NONE ||
+                    (state->white_to_move &&
+                     is_black(state->board[row][col])) ||
+                    (!state->white_to_move &&
+                     is_white(state->board[row][col]))) {
+
+                    deselect(state);
+                    break;
+                }
+
+                select_piece(state, state->board[row][col], row, col);
             }
         }
+    }
+}
+
+void game_screen_update(GameState *state) {
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        update_selection(state);
     }
 }
 
@@ -248,8 +313,8 @@ void game_screen_render(const GameState *state) {
 
     if (state->is_piece_selected) {
         DrawRectangleLinesEx(
-            piece_coords_to_bounding_box(state, state->selected_piece.row,
-                                         state->selected_piece.col),
+            piece_coords_to_bounding_box(state, state->selected_piece.pos.row,
+                                         state->selected_piece.pos.col),
             state->conf.piece_selection_box.width,
             state->conf.piece_selection_box.color);
     }
