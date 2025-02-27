@@ -1,6 +1,7 @@
 #pragma once
 
 #include "raylib.h"
+
 typedef struct Conf {
     float game_padding_percent;
     float board_padding;
@@ -29,6 +30,11 @@ typedef struct Conf {
 
         float outline_width;
     } button;
+
+    struct {
+        Color color;
+        float width;
+    } piece_selection_box;
 } Conf;
 
 int conf_load(Conf *conf);

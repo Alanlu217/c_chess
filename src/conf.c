@@ -268,6 +268,42 @@ int conf_load(Conf *conf) {
     }
     conf->button.outline_width = button_outline_width.u.d;
 
+    toml_table_t *piece_selection = toml_table_table(tb, "piece_selection");
+
+    toml_table_t *piece_selection_color =
+        toml_table_table(piece_selection, "color");
+
+    r = toml_table_int(piece_selection_color, "r");
+    if (!r.ok) {
+        return 1;
+    }
+    conf->piece_selection_box.color.r = r.u.i;
+
+    g = toml_table_int(piece_selection_color, "g");
+    if (!g.ok) {
+        return 1;
+    }
+    conf->piece_selection_box.color.g = g.u.i;
+
+    b = toml_table_int(piece_selection_color, "b");
+    if (!b.ok) {
+        return 1;
+    }
+    conf->piece_selection_box.color.b = b.u.i;
+
+    a = toml_table_int(piece_selection_color, "a");
+    if (!a.ok) {
+        return 1;
+    }
+    conf->piece_selection_box.color.a = a.u.i;
+
+    toml_value_t piece_selection_width =
+        toml_table_double(piece_selection, "width");
+    if (!piece_selection_width.ok) {
+        return 1;
+    }
+    conf->piece_selection_box.width = piece_selection_width.u.d;
+
     toml_free(tb);
 
     return 0;

@@ -5,6 +5,9 @@
 #include "screens/button.h"
 #include <stdbool.h>
 
+#define ROWS 8
+#define COLS 8
+
 typedef enum Piece {
     WHITE_PAWN = 0,
     WHITE_BISHOP = 1,
@@ -49,7 +52,7 @@ typedef struct GameState {
     // [0][0] is bottom left, on white side.
     Piece board[8][8];
 
-    bool piece_selected;
+    bool is_piece_selected;
     PieceSelection selected_piece;
 
     bool white_to_move;

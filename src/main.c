@@ -7,7 +7,7 @@
 
 int main() {
     GameState state;
-    reset_board(&state);
+    game_screen_init(&state);
     start_scene_init(&state);
 
     state.running = true;
@@ -53,7 +53,8 @@ int main() {
             start_screen_render(&state);
             break;
         case GAME:
-            draw_board(&state);
+            game_screen_update(&state);
+            game_screen_render(&state);
 
             if (IsKeyPressed(KEY_R)) {
                 state.white_to_move = !state.white_to_move;

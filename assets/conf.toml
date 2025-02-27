@@ -1,5 +1,5 @@
 [board]
-padding_pc = 0.1
+padding_pc = 0.12
 edge_padding = 1.5
 piece_scale = 0.004
 
@@ -24,3 +24,7 @@ color = { r = 200, g = 200, b = 200, a = 120 }
 hover_color = { r = 255, g = 255, b = 255, a = 150 }
 outline_color = { r = 200, g = 200, b = 200, a = 255 }
 width = 4
+
+[piece_selection]
+color = { r = 0, g = 255, b = 0, a = 255 }
+width = 5

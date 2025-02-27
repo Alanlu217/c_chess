@@ -1,5 +1,7 @@
 #include "screens/game_screen.h"
 #include "raylib.h"
+#include "screens/button.h"
+#include "state.h"
 #include "win.h"
 #include <stdio.h>
 
@@ -36,26 +38,13 @@ void reset_board(GameState *state) {
     state->white_to_move = true;
 }
 
-void load_textures(GameState *state) {
-    state->textures.board_texture = LoadTexture("assets/board.png");
-
-    state->textures.black.pawn = LoadTexture("assets/black_pawn.png");
-    state->textures.black.bishop = LoadTexture("assets/black_bishop.png");
-    state->textures.black.knight = LoadTexture("assets/black_knight.png");
-    state->textures.black.rook = LoadTexture("assets/black_rook.png");
-    state->textures.black.queen = LoadTexture("assets/black_queen.png");
-    state->textures.black.king = LoadTexture("assets/black_king.png");
-
-    state->textures.white.pawn = LoadTexture("assets/white_pawn.png");
-    state->textures.white.bishop = LoadTexture("assets/white_bishop.png");
-    state->textures.white.knight = LoadTexture("assets/white_knight.png");
-    state->textures.white.rook = LoadTexture("assets/white_rook.png");
-    state->textures.white.queen = LoadTexture("assets/white_queen.png");
-    state->textures.white.king = LoadTexture("assets/white_king.png");
-}
-
 float calc_game_padding(const GameState *state) {
     return state->win_size * state->conf.game_padding_percent;
+}
+
+float calc_square_size(const GameState *state, float game_padding,
+                       float board_padding) {
+    return (state->win_size - game_padding * 2 - board_padding * 2) / 8;
 }
 
 Vector2 piece_coords_to_game(const GameState *state, int row, int col) {
@@ -68,7 +57,7 @@ Vector2 piece_coords_to_game(const GameState *state, int row, int col) {
     }
 
     const float square_size =
-        (state->win_size - game_padding * 2 - board_padding * 2) / 8;
+        calc_square_size(state, game_padding, board_padding);
 
     Vector2 final = (Vector2){.x = game_padding + board_padding +
                                    col * square_size + 0.5 * square_size,
@@ -76,6 +65,22 @@ Vector2 piece_coords_to_game(const GameState *state, int row, int col) {
                                    row * square_size + 0.5 * square_size};
 
     return final;
+}
+
+Rectangle piece_coords_to_bounding_box(const GameState *state, int row,
+                                       int col) {
+    const float game_padding = calc_game_padding(state);
+    const float board_padding = state->conf.board_padding * state->win_size /
+                                state->textures.board_texture.height;
+    const float square_size =
+        calc_square_size(state, game_padding, board_padding);
+
+    Vector2 pos = piece_coords_to_game(state, row, col);
+
+    return (Rectangle){.x = pos.x - square_size / 2 + state->win_offset.x,
+                       .y = pos.y - square_size / 2 + state->win_offset.y,
+                       .width = square_size,
+                       .height = square_size};
 }
 
 void draw_pieces(const GameState *state) {
@@ -189,4 +194,63 @@ void draw_board(const GameState *state) {
     draw_pieces(state);
 }
 
-void game_screen_draw() {}
+void select_piece(GameState *state, Piece piece, int row, int col) {
+    state->selected_piece.piece = state->board[row][col];
+    state->selected_piece.row = row;
+    state->selected_piece.col = col;
+
+    state->is_piece_selected = true;
+}
+
+void game_screen_init(GameState *state) {
+    reset_board(state);
+    state->is_piece_selected = false;
+}
+
+void load_textures(GameState *state) {
+    state->textures.board_texture = LoadTexture("assets/board.png");
+
+    state->textures.black.pawn = LoadTexture("assets/black_pawn.png");
+    state->textures.black.bishop = LoadTexture("assets/black_bishop.png");
+    state->textures.black.knight = LoadTexture("assets/black_knight.png");
+    state->textures.black.rook = LoadTexture("assets/black_rook.png");
+    state->textures.black.queen = LoadTexture("assets/black_queen.png");
+    state->textures.black.king = LoadTexture("assets/black_king.png");
+
+    state->textures.white.pawn = LoadTexture("assets/white_pawn.png");
+    state->textures.white.bishop = LoadTexture("assets/white_bishop.png");
+    state->textures.white.knight = LoadTexture("assets/white_knight.png");
+    state->textures.white.rook = LoadTexture("assets/white_rook.png");
+    state->textures.white.queen = LoadTexture("assets/white_queen.png");
+    state->textures.white.king = LoadTexture("assets/white_king.png");
+}
+
+void game_screen_update(GameState *state) {
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        Vector2 mouse_pos = GetMousePosition();
+
+        for (int row = 0; row < ROWS; row++) {
+            for (int col = 0; col < COLS; col++) {
+                if (CheckCollisionPointRec(
+                        mouse_pos,
+                        piece_coords_to_bounding_box(state, row, col))) {
+                    select_piece(state, state->board[row][col], row, col);
+                }
+            }
+        }
+    }
+}
+
+void game_screen_render(const GameState *state) {
+    draw_pieces(state);
+
+    draw_board(state);
+
+    if (state->is_piece_selected) {
+        DrawRectangleLinesEx(
+            piece_coords_to_bounding_box(state, state->selected_piece.row,
+                                         state->selected_piece.col),
+            state->conf.piece_selection_box.width,
+            state->conf.piece_selection_box.color);
+    }
+}
