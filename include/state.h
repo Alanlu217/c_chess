@@ -2,9 +2,10 @@
 
 #include "conf.h"
 #include "raylib.h"
+#include "screens/button.h"
 #include <stdbool.h>
 
-typedef enum {
+typedef enum Piece {
     WHITE_PAWN = 0,
     WHITE_BISHOP = 1,
     WHITE_KNIGHT = 2,
@@ -22,13 +23,18 @@ typedef enum {
     NONE = 12,
 } Piece;
 
+typedef struct PieceSelection {
+    Piece piece;
+    int row, col;
+} PieceSelection;
+
 typedef enum {
     START_MENU,
     GAME,
     END_MENU,
 } Scene;
 
-typedef struct {
+typedef struct GameState {
     Conf conf;
 
     bool running;
@@ -43,10 +49,13 @@ typedef struct {
     // [0][0] is bottom left, on white side.
     Piece board[8][8];
 
+    bool piece_selected;
+    PieceSelection selected_piece;
+
     bool white_to_move;
 
     struct {
-
+        Button start_button, exit_button;
     } start_screen;
 
     struct {

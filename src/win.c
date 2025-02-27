@@ -26,3 +26,7 @@ Vector2 win_to_game(const GameState *state, Vector2 win) {
 Vector2 game_to_win(const GameState *state, Vector2 game) {
     return Vector2Add(game, state->win_offset);
 }
+
+int calc_font_size(int size, const GameState *state) {
+    return size * state->win_size / 1000;
+}

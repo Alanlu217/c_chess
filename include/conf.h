@@ -1,7 +1,7 @@
 #pragma once
 
 #include "raylib.h"
-typedef struct {
+typedef struct Conf {
     float game_padding_percent;
     float board_padding;
     float piece_scale;

@@ -1,9 +1,10 @@
 #pragma once
 
 #include "raylib.h"
-#include "state.h"
 
-typedef struct {
+typedef struct GameState GameState;
+
+typedef struct Button {
     Vector2 pos, size;
 
     char text[100];

@@ -1,5 +1,7 @@
 #include "screens/game_screen.h"
+#include "raylib.h"
 #include "win.h"
+#include <stdio.h>
 
 void reset_board(GameState *state) {
     for (int row = 0; row < 8; row++) {
@@ -167,6 +169,22 @@ void draw_board(const GameState *state) {
                                .x = pos.x + game_padding,
                                .y = pos.y + game_padding},
                    (Vector2){0, 0}, 0, WHITE);
+
+    Vector2 turn_text_pos =
+        game_to_win(state, (Vector2){.x = (float)state->win_size / 2,
+                                     .y = game_padding / 2});
+
+    char text[50];
+    if (state->white_to_move) {
+        sprintf(text, "White to play");
+    } else {
+        sprintf(text, "Black to play");
+    }
+
+    int font_size = calc_font_size(60, state);
+    float offset = MeasureText(text, font_size);
+    DrawText(text, turn_text_pos.x - offset / 2,
+             turn_text_pos.y - (float)font_size / 2, font_size, WHITE);
 
     draw_pieces(state);
 }

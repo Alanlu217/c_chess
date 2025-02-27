@@ -7,8 +7,8 @@
 
 int main() {
     GameState state;
-    StartScreen start = start_scene_init();
     reset_board(&state);
+    start_scene_init(&state);
 
     state.running = true;
     state.scene = START_MENU;
@@ -48,9 +48,9 @@ int main() {
 
         switch (state.scene) {
         case START_MENU:
-            start_screen_update(&start, &state);
+            start_screen_update(&state);
 
-            start_screen_render(&start, &state);
+            start_screen_render(&state);
             break;
         case GAME:
             draw_board(&state);

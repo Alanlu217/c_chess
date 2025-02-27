@@ -2,6 +2,7 @@
 
 #include "raylib.h"
 #include "state.h"
+#include "win.h"
 
 Rectangle getButtonBoundsWin(const Button *b, const GameState *state) {
     return (Rectangle){.x = b->pos.x * state->win_size + state->win_offset.x -
@@ -28,7 +29,7 @@ void button_draw(const Button *b, const GameState *state) {
     DrawRectangleLinesEx(bounds, state->conf.button.outline_width,
                          state->conf.button.outline_color);
 
-    int font_size = 40 * state->win_size / 1000;
+    int font_size = calc_font_size(40, state);
     int text_size = MeasureText(b->text, font_size);
     DrawText(b->text, bounds.x + bounds.width / 2 - (float)text_size / 2,
              bounds.y + bounds.height / 2 - (float)font_size / 2, font_size,
