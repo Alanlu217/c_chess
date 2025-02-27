@@ -11,3 +11,7 @@ Vector2 piece_coords_to_game(const GameState *state, int row, int col);
 void draw_pieces(const GameState *state);
 
 void draw_board(const GameState *state);
+
+void game_screen_update(GameState *state);
+
+void game_screen_render(const GameState *state);

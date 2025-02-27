@@ -31,6 +31,8 @@ typedef enum {
 typedef struct {
     Conf conf;
 
+    bool running;
+
     Scene scene;
 
     int window_x, window_y;

@@ -1,14 +1,16 @@
 #include "conf.h"
 #include "raylib.h"
-#include "screens/button.h"
 #include "screens/game_screen.h"
+#include "screens/start_screen.h"
 #include "state.h"
 #include "win.h"
 
 int main() {
     GameState state;
+    StartScreen start = start_scene_init();
     reset_board(&state);
 
+    state.running = true;
     state.scene = START_MENU;
 
     state.window_x = 1000;
@@ -26,11 +28,11 @@ int main() {
 
     update_window_state(&state);
 
-    Button b = {.text = "Start!",
-                .pos = (Vector2){.x = 0.5, .y = 0.5},
-                .size = (Vector2){.x = 0.3, .y = 0.05}};
+    while (state.running) {
+        if (WindowShouldClose()) {
+            state.running = false;
+        }
 
-    while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_BACKSLASH)) {
             if (conf_load(&state.conf) != 0) {
                 CloseWindow();
@@ -46,11 +48,9 @@ int main() {
 
         switch (state.scene) {
         case START_MENU:
-            button_draw(&b, &state);
+            start_screen_update(&start, &state);
 
-            if (button_pressed(&b, &state)) {
-                state.scene = GAME;
-            }
+            start_screen_render(&start, &state);
             break;
         case GAME:
             draw_board(&state);

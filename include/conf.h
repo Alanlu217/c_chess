@@ -24,6 +24,7 @@ typedef struct {
 
     struct {
         Color color;
+        Color hover_color;
         Color outline_color;
 
         float outline_width;

@@ -170,3 +170,5 @@ void draw_board(const GameState *state) {
 
     draw_pieces(state);
 }
+
+void game_screen_draw() {}

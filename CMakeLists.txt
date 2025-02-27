@@ -14,6 +14,7 @@ add_executable(chess
     "src/conf.c"
     "src/win.c"
     "src/screens/game_screen.c"
+    "src/screens/start_screen.c"
     "src/screens/button.c"
 )
 

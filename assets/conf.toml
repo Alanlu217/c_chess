@@ -18,3 +18,9 @@ knight = { x = 0.002, y = 0 }
 rook = { x = 0.0075, y = -0.005 }
 queen = { x = 0.003, y = -0.001 }
 king = { x = 0, y = 0 }
+
+[button]
+color = { r = 200, g = 200, b = 200, a = 120 }
+hover_color = { r = 255, g = 255, b = 255, a = 150 }
+outline_color = { r = 200, g = 200, b = 200, a = 255 }
+width = 4

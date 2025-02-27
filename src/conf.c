@@ -209,6 +209,32 @@ int conf_load(Conf *conf) {
     }
     conf->button.color.a = a.u.i;
 
+    toml_table_t *button_hover_color = toml_table_table(button, "hover_color");
+
+    r = toml_table_int(button_hover_color, "r");
+    if (!r.ok) {
+        return 1;
+    }
+    conf->button.hover_color.r = r.u.i;
+
+    g = toml_table_int(button_hover_color, "g");
+    if (!g.ok) {
+        return 1;
+    }
+    conf->button.hover_color.g = g.u.i;
+
+    b = toml_table_int(button_hover_color, "b");
+    if (!b.ok) {
+        return 1;
+    }
+    conf->button.hover_color.b = b.u.i;
+
+    a = toml_table_int(button_hover_color, "a");
+    if (!a.ok) {
+        return 1;
+    }
+    conf->button.hover_color.a = a.u.i;
+
     toml_table_t *button_outline_color =
         toml_table_table(button, "outline_color");
 
