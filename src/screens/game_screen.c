@@ -2,8 +2,10 @@
 #include "raylib.h"
 #include "screens/button.h"
 #include "state.h"
+#include "utarray.h"
 #include "win.h"
 #include <stdio.h>
+#include <time.h>
 
 void reset_board(GameState *state) {
     for (int row = 0; row < 8; row++) {
@@ -36,6 +38,9 @@ void reset_board(GameState *state) {
     state->board[7][7] = BLACK_ROOK;
 
     state->white_to_move = true;
+    state->view_as_white = true;
+
+    state->selected_piece_valid_moves = NULL;
 }
 
 float calc_game_padding(const GameState *state) {
@@ -52,7 +57,7 @@ Vector2 piece_coords_to_game(const GameState *state, int row, int col) {
     const float board_padding = state->conf.board_padding * state->win_size /
                                 state->textures.board_texture.height;
 
-    if (state->white_to_move) {
+    if (state->view_as_white) {
         row = 7 - row;
     }
 
@@ -194,15 +199,62 @@ void draw_board(const GameState *state) {
     draw_pieces(state);
 }
 
+UT_array *gen_valid_moves(GameState *state, PieceSelection piece) {
+    UT_array *moves;
+    utarray_new(moves, &state->valid_moves_icd);
+
+    PieceLocation pos;
+    pos.row = 0;
+    pos.col = 0;
+
+    utarray_push_back(moves, &pos);
+
+    return moves;
+}
+
+bool is_move_valid(UT_array *valid_moves, PieceSelection move) {
+    PieceLocation *pos;
+
+    for (pos = (PieceLocation *)utarray_front(valid_moves); pos != NULL;
+         pos = (PieceLocation *)utarray_next(valid_moves, pos)) {
+        if (pos->col == move.pos.col && pos->row == move.pos.row) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void select_piece(GameState *state, Piece piece, int row, int col) {
     state->selected_piece.piece = state->board[row][col];
     state->selected_piece.pos.row = row;
     state->selected_piece.pos.col = col;
 
+    if (state->selected_piece_valid_moves) {
+        utarray_free(state->selected_piece_valid_moves);
+    }
+    state->selected_piece_valid_moves = gen_valid_moves(
+        state,
+        (PieceSelection){.piece = piece,
+                         .pos = (PieceLocation){.row = row, .col = col}});
+
     state->is_piece_selected = true;
 }
 
-void deselect(GameState *state) { state->is_piece_selected = false; }
+void deselect(GameState *state) {
+    state->is_piece_selected = false;
+
+    if (state->selected_piece_valid_moves) {
+        utarray_free(state->selected_piece_valid_moves);
+        state->selected_piece_valid_moves = NULL;
+    }
+}
+
+void next_turn(GameState *state) {
+    state->white_to_move = !state->white_to_move;
+
+    deselect(state);
+}
 
 void game_screen_init(GameState *state) {
     reset_board(state);
@@ -259,15 +311,15 @@ bool is_black(Piece piece) {
     }
 }
 
-bool is_move_valid(Piece piece, PieceLocation start, PieceLocation end) {}
-
 void move_piece(GameState *state, PieceLocation pos) {
     if (state->board[pos.row][pos.col] == NONE) {
         state->board[state->selected_piece.pos.row]
                     [state->selected_piece.pos.col] = NONE;
         state->board[pos.row][pos.col] = state->selected_piece.piece;
         state->is_piece_selected = false;
-        state->white_to_move = !state->white_to_move;
+        next_turn(state);
+    } else {
+        deselect(state);
     }
 }
 
@@ -317,5 +369,18 @@ void game_screen_render(const GameState *state) {
                                          state->selected_piece.pos.col),
             state->conf.piece_selection_box.width,
             state->conf.piece_selection_box.color);
+    }
+
+    if (state->selected_piece_valid_moves) {
+        PieceLocation *pos;
+
+        for (pos = (PieceLocation *)utarray_front(
+                 state->selected_piece_valid_moves);
+             pos != NULL; pos = (PieceLocation *)utarray_next(
+                              state->selected_piece_valid_moves, pos)) {
+            DrawRectangleLinesEx(
+                piece_coords_to_bounding_box(state, pos->row, pos->col),
+                state->conf.piece_selection_box.width, (Color){0, 0, 255, 255});
+        }
     }
 }

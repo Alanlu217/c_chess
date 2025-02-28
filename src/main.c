@@ -3,6 +3,7 @@
 #include "screens/game_screen.h"
 #include "screens/start_screen.h"
 #include "state.h"
+#include "utarray.h"
 #include "win.h"
 
 int main() {
@@ -15,6 +16,8 @@ int main() {
 
     state.window_x = 1000;
     state.window_y = 1000;
+
+    state.valid_moves_icd = (UT_icd){sizeof(PieceLocation), NULL, NULL, NULL};
 
     if (conf_load(&state.conf) != 0) {
         return 1;
@@ -57,7 +60,7 @@ int main() {
             game_screen_render(&state);
 
             if (IsKeyPressed(KEY_R)) {
-                state.white_to_move = !state.white_to_move;
+                state.view_as_white = !state.view_as_white;
             }
             break;
         case END_MENU:

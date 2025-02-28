@@ -3,6 +3,7 @@
 #include "conf.h"
 #include "raylib.h"
 #include "screens/button.h"
+#include "utarray.h"
 #include <stdbool.h>
 
 #define ROWS 8
@@ -58,8 +59,10 @@ typedef struct GameState {
 
     bool is_piece_selected;
     PieceSelection selected_piece;
+    UT_icd valid_moves_icd;
+    UT_array *selected_piece_valid_moves;
 
-    bool white_to_move;
+    bool white_to_move, view_as_white;
 
     struct {
         Button start_button, exit_button;
