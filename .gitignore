@@ -9,3 +9,7 @@ Taskfile.yml
 .clang-format
 
 .clangd
+
+.zig-cache
+
+zig-out

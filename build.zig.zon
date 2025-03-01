@@ -1,0 +1,10 @@
+.{
+    .name = .c_chess,
+    .version = "0.0.0",
+    .fingerprint = 0x79e8e22d9cf05ad4,
+    //.minimum_zig_version = "0.11.0",
+
+    .dependencies = .{},
+
+    .paths = .{ "build.zig", "build.zig.zon", "vendor", "src", "include" },
+}
