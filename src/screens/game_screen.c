@@ -239,6 +239,14 @@ Piece piece_at(GameState *state, int row, int col) {
     return state->game.board[row][col];
 }
 
+Piece set_piece(GameState *state, Piece piece, int row, int col) {
+    Piece prev_piece = piece_at(state, row, col);
+
+    state->game.board[row][col] = piece;
+
+    return prev_piece;
+}
+
 void check_direction(UT_array *moves, GameState *state, bool white,
                      PieceLocation pos, PieceLocation dir) {
     PieceLocation curr = pos;
@@ -483,6 +491,26 @@ bool is_king_in_check(GameState *state, bool for_white) {
     return false;
 }
 
+bool move_results_in_check(GameState *state, PieceLocation from,
+                           PieceLocation to, bool for_white) {
+    Piece piece = piece_at(state, from.row, from.col);
+    Piece prev_piece = set_piece(state, piece, to.row, to.col);
+
+    set_piece(state, NONE, from.row, from.col);
+
+    if (is_king_in_check(state, for_white)) {
+        set_piece(state, prev_piece, to.row, to.col);
+        set_piece(state, piece, from.row, from.col);
+
+        return true;
+    } else {
+        set_piece(state, prev_piece, to.row, to.col);
+        set_piece(state, piece, from.row, from.col);
+
+        return false;
+    }
+}
+
 UT_array *gen_valid_moves(UT_array *moves, GameState *state,
                           PieceSelection piece) {
     int prow, pcol;
@@ -622,10 +650,22 @@ UT_array *gen_valid_moves(UT_array *moves, GameState *state,
         break;
     }
 
+    PieceLocation *test_pos;
+    for (test_pos = (PieceLocation *)utarray_back(moves); test_pos != NULL;
+         test_pos = (PieceLocation *)utarray_prev(moves, test_pos)) {
+        if (move_results_in_check(state, piece.pos, *test_pos,
+                                  is_white(piece.piece))) {
+            PieceLocation swap_pos = *(PieceLocation *)utarray_back(moves);
+            *test_pos = swap_pos;
+
+            utarray_erase(moves, utarray_len(moves) - 1, 1);
+        }
+    }
+
     return moves;
 }
 
-bool is_move_valid(UT_array *valid_moves, PieceSelection move) {
+bool is_move_possible(UT_array *valid_moves, PieceSelection move) {
     PieceLocation *pos;
 
     for (pos = (PieceLocation *)utarray_front(valid_moves); pos != NULL;
@@ -689,7 +729,7 @@ void load_textures(GameState *state) {
 }
 
 int move_piece(GameState *state, PieceLocation pos) {
-    if (is_move_valid(
+    if (is_move_possible(
             state->game.selected_piece_valid_moves,
             (PieceSelection){.piece = state->game.selected_piece.piece,
                              .pos = pos})) {

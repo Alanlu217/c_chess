@@ -5,4 +5,4 @@
  - [ ] Queen
  - [ ] En passent
  - [ ] Castling
- - [ ] Checking for King Check when validating moves
+ - [x] Checking for King Check when validating moves
