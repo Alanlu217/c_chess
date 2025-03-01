@@ -728,10 +728,9 @@ int move_piece(GameState *state, PieceLocation pos) {
             state->game.taken_black_pieces.queen += 1;
             break;
         default:
-            state->game.board[pos.row][pos.col] =
-                state->game.selected_piece.piece;
             break;
         }
+        state->game.board[pos.row][pos.col] = state->game.selected_piece.piece;
 
         state->game.is_piece_selected = false;
         next_turn(state);
