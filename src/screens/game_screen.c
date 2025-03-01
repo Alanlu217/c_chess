@@ -479,6 +479,8 @@ bool is_king_in_check(GameState *state, bool for_white) {
             return true;
         }
     }
+
+    return false;
 }
 
 UT_array *gen_valid_moves(UT_array *moves, GameState *state,
