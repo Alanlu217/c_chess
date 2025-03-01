@@ -10,37 +10,37 @@
 void reset_board(GameState *state) {
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
-            state->board[row][col] = NONE;
+            state->game.board[row][col] = NONE;
         }
     }
 
-    state->board[0][0] = WHITE_ROOK;
-    state->board[0][1] = WHITE_KNIGHT;
-    state->board[0][2] = WHITE_BISHOP;
-    state->board[0][3] = WHITE_QUEEN;
-    state->board[0][4] = WHITE_KING;
-    state->board[0][5] = WHITE_BISHOP;
-    state->board[0][6] = WHITE_KNIGHT;
-    state->board[0][7] = WHITE_ROOK;
+    state->game.board[0][0] = WHITE_ROOK;
+    state->game.board[0][1] = WHITE_KNIGHT;
+    state->game.board[0][2] = WHITE_BISHOP;
+    state->game.board[0][3] = WHITE_QUEEN;
+    state->game.board[0][4] = WHITE_KING;
+    state->game.board[0][5] = WHITE_BISHOP;
+    state->game.board[0][6] = WHITE_KNIGHT;
+    state->game.board[0][7] = WHITE_ROOK;
 
     for (int col = 0; col < 8; col++) {
-        state->board[1][col] = WHITE_PAWN;
-        state->board[6][col] = BLACK_PAWN;
+        state->game.board[1][col] = WHITE_PAWN;
+        state->game.board[6][col] = BLACK_PAWN;
     }
 
-    state->board[7][0] = BLACK_ROOK;
-    state->board[7][1] = BLACK_KNIGHT;
-    state->board[7][2] = BLACK_BISHOP;
-    state->board[7][3] = BLACK_QUEEN;
-    state->board[7][4] = BLACK_KING;
-    state->board[7][5] = BLACK_BISHOP;
-    state->board[7][6] = BLACK_KNIGHT;
-    state->board[7][7] = BLACK_ROOK;
+    state->game.board[7][0] = BLACK_ROOK;
+    state->game.board[7][1] = BLACK_KNIGHT;
+    state->game.board[7][2] = BLACK_BISHOP;
+    state->game.board[7][3] = BLACK_QUEEN;
+    state->game.board[7][4] = BLACK_KING;
+    state->game.board[7][5] = BLACK_BISHOP;
+    state->game.board[7][6] = BLACK_KNIGHT;
+    state->game.board[7][7] = BLACK_ROOK;
 
-    state->white_to_move = true;
-    state->view_as_white = true;
+    state->game.white_to_move = true;
+    state->game.view_as_white = true;
 
-    state->selected_piece_valid_moves = NULL;
+    state->game.selected_piece_valid_moves = NULL;
 }
 
 float calc_game_padding(const GameState *state) {
@@ -57,7 +57,7 @@ Vector2 piece_coords_to_game(const GameState *state, int row, int col) {
     const float board_padding = state->conf.board_padding * state->win_size /
                                 state->textures.board_texture.height;
 
-    if (state->view_as_white) {
+    if (state->game.view_as_white) {
         row = 7 - row;
     }
 
@@ -94,7 +94,7 @@ void draw_pieces(const GameState *state) {
             Texture2D tex;
             Vector2 offset;
 
-            switch (state->board[row][col]) {
+            switch (state->game.board[row][col]) {
             case WHITE_PAWN:
                 tex = state->textures.white.pawn;
                 offset = state->conf.piece_offsets.white_pawn;
@@ -143,7 +143,7 @@ void draw_pieces(const GameState *state) {
                 tex = state->textures.black.king;
                 offset = state->conf.piece_offsets.black_king;
                 break;
-            case NONE:
+            default:
                 continue;
             }
 
@@ -185,7 +185,7 @@ void draw_board(const GameState *state) {
                                      .y = game_padding / 2});
 
     char text[50];
-    if (state->white_to_move) {
+    if (state->game.white_to_move) {
         sprintf(text, "White to play");
     } else {
         sprintf(text, "Black to play");
@@ -197,86 +197,6 @@ void draw_board(const GameState *state) {
              turn_text_pos.y - (float)font_size / 2, font_size, WHITE);
 
     draw_pieces(state);
-}
-
-UT_array *gen_valid_moves(GameState *state, PieceSelection piece) {
-    UT_array *moves;
-    utarray_new(moves, &state->valid_moves_icd);
-
-    PieceLocation pos;
-    pos.row = 0;
-    pos.col = 0;
-
-    utarray_push_back(moves, &pos);
-
-    return moves;
-}
-
-bool is_move_valid(UT_array *valid_moves, PieceSelection move) {
-    PieceLocation *pos;
-
-    for (pos = (PieceLocation *)utarray_front(valid_moves); pos != NULL;
-         pos = (PieceLocation *)utarray_next(valid_moves, pos)) {
-        if (pos->col == move.pos.col && pos->row == move.pos.row) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void select_piece(GameState *state, Piece piece, int row, int col) {
-    state->selected_piece.piece = state->board[row][col];
-    state->selected_piece.pos.row = row;
-    state->selected_piece.pos.col = col;
-
-    if (state->selected_piece_valid_moves) {
-        utarray_free(state->selected_piece_valid_moves);
-    }
-    state->selected_piece_valid_moves = gen_valid_moves(
-        state,
-        (PieceSelection){.piece = piece,
-                         .pos = (PieceLocation){.row = row, .col = col}});
-
-    state->is_piece_selected = true;
-}
-
-void deselect(GameState *state) {
-    state->is_piece_selected = false;
-
-    if (state->selected_piece_valid_moves) {
-        utarray_free(state->selected_piece_valid_moves);
-        state->selected_piece_valid_moves = NULL;
-    }
-}
-
-void next_turn(GameState *state) {
-    state->white_to_move = !state->white_to_move;
-
-    deselect(state);
-}
-
-void game_screen_init(GameState *state) {
-    reset_board(state);
-    state->is_piece_selected = false;
-}
-
-void load_textures(GameState *state) {
-    state->textures.board_texture = LoadTexture("assets/board.png");
-
-    state->textures.black.pawn = LoadTexture("assets/black_pawn.png");
-    state->textures.black.bishop = LoadTexture("assets/black_bishop.png");
-    state->textures.black.knight = LoadTexture("assets/black_knight.png");
-    state->textures.black.rook = LoadTexture("assets/black_rook.png");
-    state->textures.black.queen = LoadTexture("assets/black_queen.png");
-    state->textures.black.king = LoadTexture("assets/black_king.png");
-
-    state->textures.white.pawn = LoadTexture("assets/white_pawn.png");
-    state->textures.white.bishop = LoadTexture("assets/white_bishop.png");
-    state->textures.white.knight = LoadTexture("assets/white_knight.png");
-    state->textures.white.rook = LoadTexture("assets/white_rook.png");
-    state->textures.white.queen = LoadTexture("assets/white_queen.png");
-    state->textures.white.king = LoadTexture("assets/white_king.png");
 }
 
 bool is_white(Piece piece) {
@@ -311,15 +231,262 @@ bool is_black(Piece piece) {
     }
 }
 
-void move_piece(GameState *state, PieceLocation pos) {
-    if (state->board[pos.row][pos.col] == NONE) {
-        state->board[state->selected_piece.pos.row]
-                    [state->selected_piece.pos.col] = NONE;
-        state->board[pos.row][pos.col] = state->selected_piece.piece;
-        state->is_piece_selected = false;
+Piece piece_at(GameState *state, int row, int col) {
+    if (row < 0 || row > 7 || col < 0 || col > 7) {
+        return INVALID;
+    }
+
+    return state->game.board[row][col];
+}
+
+void check_direction(UT_array *moves, GameState *state, bool white,
+                     PieceLocation pos, PieceLocation direction) {
+    PieceLocation curr = pos;
+    while (true) {
+        curr.row += direction.row;
+        curr.col += direction.col;
+
+        if (piece_at(state, curr.row, curr.col) == NONE) {
+            utarray_push_back(moves, &curr);
+            continue;
+        }
+
+        if ((white && is_black(piece_at(state, curr.row, curr.col))) ||
+            (!white && is_white(piece_at(state, curr.row, curr.col)))) {
+            utarray_push_back(moves, &curr);
+        }
+
+        break;
+    }
+}
+
+UT_array *gen_valid_moves(UT_array *moves, GameState *state,
+                          PieceSelection piece);
+
+UT_array *gen_all_moves(GameState *state, bool for_white) {
+    UT_array *moves = NULL;
+    utarray_new(moves, &state->game.valid_moves_icd);
+
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            Piece piece = piece_at(state, row, col);
+            if ((for_white && is_black(piece)) ||
+                (!for_white && is_white(piece)) || piece == BLACK_KING ||
+                piece == WHITE_KING) {
+                continue;
+            }
+
+            gen_valid_moves(moves, state,
+                            (PieceSelection){.piece = piece,
+                                             .pos = (PieceLocation){
+                                                 .row = row, .col = col}});
+        }
+    }
+
+    return moves;
+}
+
+UT_array *gen_valid_moves(UT_array *moves, GameState *state,
+                          PieceSelection piece) {
+    int prow, pcol;
+    prow = piece.pos.row;
+    pcol = piece.pos.col;
+
+    PieceLocation pos;
+
+    int white = is_white(piece.piece);
+    int forwards = is_white(piece.piece) ? 1 : -1;
+
+    switch (piece.piece) {
+    case WHITE_PAWN:
+    case BLACK_PAWN:
+        if (piece_at(state, prow + forwards, pcol) == NONE) {
+            pos.row = prow + forwards;
+            pos.col = pcol;
+            utarray_push_back(moves, &pos);
+        }
+
+        if (((white && prow == 1) || (!white && prow == 6)) &&
+            piece_at(state, prow + forwards * 2, pcol) == NONE) {
+            pos.row = prow + forwards * 2;
+            pos.col = pcol;
+            utarray_push_back(moves, &pos);
+        }
+
+        if (white && is_black(piece_at(state, prow + 1, pcol + 1))) {
+            pos.row = prow + 1;
+            pos.col = pcol + 1;
+            utarray_push_back(moves, &pos);
+        }
+
+        if (white && is_black(piece_at(state, prow + 1, pcol - 1))) {
+            pos.row = prow + 1;
+            pos.col = pcol - 1;
+            utarray_push_back(moves, &pos);
+        }
+
+        if (!white && is_white(piece_at(state, prow - 1, pcol + 1))) {
+            pos.row = prow - 1;
+            pos.col = pcol + 1;
+            utarray_push_back(moves, &pos);
+        }
+
+        if (!white && is_white(piece_at(state, prow - 1, pcol - 1))) {
+            pos.row = prow - 1;
+            pos.col = pcol - 1;
+            utarray_push_back(moves, &pos);
+        }
+        break;
+    case WHITE_BISHOP:
+    case BLACK_BISHOP:
+        check_direction(moves, state, white, piece.pos, (PieceLocation){1, 1});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){1, -1});
+        check_direction(moves, state, white, piece.pos,
+                        (PieceLocation){-1, -1});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){-1, 1});
+        break;
+    case WHITE_KNIGHT:
+    case BLACK_KNIGHT:
+        pos.row = 0; // No declarations after label
+        PieceLocation knight_moves[8] = {
+            (PieceLocation){.row = 1, .col = 2},
+            (PieceLocation){.row = 2, .col = 1},
+            (PieceLocation){.row = 2, .col = -1},
+            (PieceLocation){.row = 1, .col = -2},
+            (PieceLocation){.row = -1, .col = -2},
+            (PieceLocation){.row = -2, .col = -1},
+            (PieceLocation){.row = -2, .col = 1},
+            (PieceLocation){.row = -1, .col = 2},
+        };
+
+        for (int i = 0; i < 8; i++) {
+            pos.row = knight_moves[i].row + prow;
+            pos.col = knight_moves[i].col + pcol;
+
+            if ((white && is_black(piece_at(state, pos.row, pos.col))) ||
+                (!white && is_white(piece_at(state, pos.row, pos.col))) ||
+                piece_at(state, pos.row, pos.col) == NONE) {
+                utarray_push_back(moves, &pos);
+            }
+        }
+        break;
+    case WHITE_ROOK:
+    case BLACK_ROOK:
+        check_direction(moves, state, white, piece.pos, (PieceLocation){0, 1});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){0, -1});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){-1, 0});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){1, 0});
+        break;
+    case WHITE_QUEEN:
+    case BLACK_QUEEN:
+        check_direction(moves, state, white, piece.pos, (PieceLocation){0, 1});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){0, -1});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){-1, 0});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){1, 0});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){1, 1});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){1, -1});
+        check_direction(moves, state, white, piece.pos,
+                        (PieceLocation){-1, -1});
+        check_direction(moves, state, white, piece.pos, (PieceLocation){-1, 1});
+        break;
+    case WHITE_KING:
+    case BLACK_KING:
+        pos.row = 0; // label can't be followed by declaration
+        UT_array *all_moves;
+
+        if (white) {
+            all_moves = gen_all_moves(state, false);
+        } else {
+            all_moves = gen_all_moves(state, true);
+        }
+
+        pos.row = prow + 1;
+        pos.col = pcol;
+        // if () {
+
+        // }
+        break;
+    case INVALID:
+    case NONE:
+        break;
+    }
+
+    return moves;
+}
+
+bool is_move_valid(UT_array *valid_moves, PieceSelection move) {
+    PieceLocation *pos;
+
+    for (pos = (PieceLocation *)utarray_front(valid_moves); pos != NULL;
+         pos = (PieceLocation *)utarray_next(valid_moves, pos)) {
+        if (pos->col == move.pos.col && pos->row == move.pos.row) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void select_piece(GameState *state, Piece piece, int row, int col) {
+    state->game.selected_piece.piece = state->game.board[row][col];
+    state->game.selected_piece.pos.row = row;
+    state->game.selected_piece.pos.col = col;
+
+    utarray_clear(state->game.selected_piece_valid_moves);
+
+    state->game.selected_piece_valid_moves = gen_valid_moves(
+        state->game.selected_piece_valid_moves, state,
+        (PieceSelection){.piece = piece,
+                         .pos = (PieceLocation){.row = row, .col = col}});
+
+    state->game.is_piece_selected = true;
+}
+
+void deselect(GameState *state) {
+    state->game.is_piece_selected = false;
+
+    utarray_clear(state->game.selected_piece_valid_moves);
+}
+
+void next_turn(GameState *state) {
+    state->game.white_to_move = !state->game.white_to_move;
+
+    deselect(state);
+}
+
+void game_screen_init(GameState *state) {
+    reset_board(state);
+    state->game.is_piece_selected = false;
+}
+
+void load_textures(GameState *state) {
+    state->textures.board_texture = LoadTexture("assets/board.png");
+
+    state->textures.black.pawn = LoadTexture("assets/black_pawn.png");
+    state->textures.black.bishop = LoadTexture("assets/black_bishop.png");
+    state->textures.black.knight = LoadTexture("assets/black_knight.png");
+    state->textures.black.rook = LoadTexture("assets/black_rook.png");
+    state->textures.black.queen = LoadTexture("assets/black_queen.png");
+    state->textures.black.king = LoadTexture("assets/black_king.png");
+
+    state->textures.white.pawn = LoadTexture("assets/white_pawn.png");
+    state->textures.white.bishop = LoadTexture("assets/white_bishop.png");
+    state->textures.white.knight = LoadTexture("assets/white_knight.png");
+    state->textures.white.rook = LoadTexture("assets/white_rook.png");
+    state->textures.white.queen = LoadTexture("assets/white_queen.png");
+    state->textures.white.king = LoadTexture("assets/white_king.png");
+}
+
+int move_piece(GameState *state, PieceLocation pos) {
+    if (state->game.board[pos.row][pos.col] == NONE) {
+        state->game.board[state->game.selected_piece.pos.row]
+                         [state->game.selected_piece.pos.col] = NONE;
+        state->game.board[pos.row][pos.col] = state->game.selected_piece.piece;
+        state->game.is_piece_selected = false;
         next_turn(state);
+        return 0;
     } else {
-        deselect(state);
+        return 1;
     }
 }
 
@@ -331,22 +498,24 @@ void update_selection(GameState *state) {
             if (CheckCollisionPointRec(
                     mouse_pos, piece_coords_to_bounding_box(state, row, col))) {
 
-                if (state->is_piece_selected) {
-                    move_piece(state, (PieceLocation){row, col});
-                    break;
+                if (state->game.is_piece_selected) {
+                    if (!move_piece(state, (PieceLocation){row, col})) {
+                        break;
+                    }
+                    deselect(state);
                 }
 
-                if (state->board[row][col] == NONE ||
-                    (state->white_to_move &&
-                     is_black(state->board[row][col])) ||
-                    (!state->white_to_move &&
-                     is_white(state->board[row][col]))) {
+                if (state->game.board[row][col] == NONE ||
+                    (state->game.white_to_move &&
+                     is_black(state->game.board[row][col])) ||
+                    (!state->game.white_to_move &&
+                     is_white(state->game.board[row][col]))) {
 
                     deselect(state);
                     break;
                 }
 
-                select_piece(state, state->board[row][col], row, col);
+                select_piece(state, state->game.board[row][col], row, col);
             }
         }
     }
@@ -363,21 +532,21 @@ void game_screen_render(const GameState *state) {
 
     draw_board(state);
 
-    if (state->is_piece_selected) {
-        DrawRectangleLinesEx(
-            piece_coords_to_bounding_box(state, state->selected_piece.pos.row,
-                                         state->selected_piece.pos.col),
-            state->conf.piece_selection_box.width,
-            state->conf.piece_selection_box.color);
+    if (state->game.is_piece_selected) {
+        DrawRectangleLinesEx(piece_coords_to_bounding_box(
+                                 state, state->game.selected_piece.pos.row,
+                                 state->game.selected_piece.pos.col),
+                             state->conf.piece_selection_box.width,
+                             state->conf.piece_selection_box.color);
     }
 
-    if (state->selected_piece_valid_moves) {
+    if (state->game.selected_piece_valid_moves) {
         PieceLocation *pos;
 
         for (pos = (PieceLocation *)utarray_front(
-                 state->selected_piece_valid_moves);
+                 state->game.selected_piece_valid_moves);
              pos != NULL; pos = (PieceLocation *)utarray_next(
-                              state->selected_piece_valid_moves, pos)) {
+                              state->game.selected_piece_valid_moves, pos)) {
             DrawRectangleLinesEx(
                 piece_coords_to_bounding_box(state, pos->row, pos->col),
                 state->conf.piece_selection_box.width, (Color){0, 0, 255, 255});

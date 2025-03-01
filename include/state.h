@@ -24,7 +24,8 @@ typedef enum Piece {
     BLACK_QUEEN = 10,
     BLACK_KING = 11,
 
-    NONE = 12,
+    INVALID = 12,
+    NONE = 13,
 } Piece;
 
 typedef struct PieceLocation {
@@ -36,11 +37,17 @@ typedef struct PieceSelection {
     PieceLocation pos;
 } PieceSelection;
 
+typedef struct PieceCount {
+    int pawn, bishop, knight, rook, queen, king;
+} PieceCount;
+
 typedef enum {
     START_MENU,
     GAME,
     END_MENU,
 } Scene;
+
+typedef Piece Board[8][8];
 
 typedef struct GameState {
     Conf conf;
@@ -55,14 +62,16 @@ typedef struct GameState {
 
     // [row][col]
     // [0][0] is bottom left, on white side.
-    Piece board[8][8];
+    struct {
+        Board board;
 
-    bool is_piece_selected;
-    PieceSelection selected_piece;
-    UT_icd valid_moves_icd;
-    UT_array *selected_piece_valid_moves;
+        bool is_piece_selected;
+        PieceSelection selected_piece;
+        UT_icd valid_moves_icd;
+        UT_array *selected_piece_valid_moves;
 
-    bool white_to_move, view_as_white;
+        bool white_to_move, view_as_white;
+    } game;
 
     struct {
         Button start_button, exit_button;
