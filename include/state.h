@@ -71,6 +71,8 @@ typedef struct GameState {
         UT_array *selected_piece_valid_moves;
 
         bool white_to_move, view_as_white;
+
+        PieceCount taken_white_pieces, taken_black_pieces;
     } game;
 
     struct {
