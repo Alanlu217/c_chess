@@ -240,11 +240,11 @@ Piece piece_at(GameState *state, int row, int col) {
 }
 
 void check_direction(UT_array *moves, GameState *state, bool white,
-                     PieceLocation pos, PieceLocation direction) {
+                     PieceLocation pos, PieceLocation dir) {
     PieceLocation curr = pos;
     while (true) {
-        curr.row += direction.row;
-        curr.col += direction.col;
+        curr.row += dir.row;
+        curr.col += dir.col;
 
         if (piece_at(state, curr.row, curr.col) == NONE) {
             utarray_push_back(moves, &curr);
@@ -257,6 +257,22 @@ void check_direction(UT_array *moves, GameState *state, bool white,
         }
 
         break;
+    }
+}
+
+Piece piece_in_direction(GameState *state, PieceLocation pos,
+                         PieceLocation dir) {
+    PieceLocation curr = pos;
+
+    while (true) {
+        curr.row += dir.row;
+        curr.col += dir.col;
+
+        Piece piece = piece_at(state, curr.row, curr.col);
+
+        if (piece != NONE) {
+            return piece;
+        }
     }
 }
 
@@ -285,6 +301,17 @@ UT_array *gen_all_moves(GameState *state, bool for_white) {
 
     return moves;
 }
+
+PieceLocation knight_moves[8] = {
+    (PieceLocation){.row = 1, .col = 2},
+    (PieceLocation){.row = 2, .col = 1},
+    (PieceLocation){.row = 2, .col = -1},
+    (PieceLocation){.row = 1, .col = -2},
+    (PieceLocation){.row = -1, .col = -2},
+    (PieceLocation){.row = -2, .col = -1},
+    (PieceLocation){.row = -2, .col = 1},
+    (PieceLocation){.row = -1, .col = 2},
+};
 
 UT_array *gen_valid_moves(UT_array *moves, GameState *state,
                           PieceSelection piece) {
@@ -348,16 +375,6 @@ UT_array *gen_valid_moves(UT_array *moves, GameState *state,
     case WHITE_KNIGHT:
     case BLACK_KNIGHT:
         pos.row = 0; // No declarations after label
-        PieceLocation knight_moves[8] = {
-            (PieceLocation){.row = 1, .col = 2},
-            (PieceLocation){.row = 2, .col = 1},
-            (PieceLocation){.row = 2, .col = -1},
-            (PieceLocation){.row = 1, .col = -2},
-            (PieceLocation){.row = -1, .col = -2},
-            (PieceLocation){.row = -2, .col = -1},
-            (PieceLocation){.row = -2, .col = 1},
-            (PieceLocation){.row = -1, .col = 2},
-        };
 
         for (int i = 0; i < 8; i++) {
             pos.row = knight_moves[i].row + prow;
@@ -391,23 +408,187 @@ UT_array *gen_valid_moves(UT_array *moves, GameState *state,
         break;
     case WHITE_KING:
     case BLACK_KING:
-        pos.row = 0; // label can't be followed by declaration
-        UT_array *all_moves;
+        for (int row = -1; row <= 1; row++) {
+            for (int col = -1; col <= 1; col++) {
+                if (row == 0 && col == 0) {
+                    continue;
+                }
 
-        if (white) {
-            all_moves = gen_all_moves(state, false);
-        } else {
-            all_moves = gen_all_moves(state, true);
+                PieceLocation board_pos;
+                board_pos.row = prow + row;
+                board_pos.col = pcol + col;
+
+                Piece piece_in_pos = piece_at(state, prow + row, pcol + col);
+                if (piece_in_pos == INVALID ||
+                    (white && is_white(piece_in_pos)) ||
+                    (!white && is_black(piece_in_pos))) {
+                    continue;
+                }
+
+                if (white) {
+                    if (piece_at(state, board_pos.row + 1, board_pos.col + 1) ==
+                        BLACK_PAWN) {
+                        continue;
+                    }
+
+                    if (piece_at(state, board_pos.row + 1, board_pos.col - 1) ==
+                        BLACK_PAWN) {
+                        continue;
+                    }
+
+                    Piece test_piece;
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){1, 0});
+                    if (test_piece == BLACK_ROOK || test_piece == BLACK_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){1, 1});
+                    if (test_piece == BLACK_BISHOP ||
+                        test_piece == BLACK_QUEEN) {
+                        printf("yes");
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){0, 1});
+                    if (test_piece == BLACK_ROOK || test_piece == BLACK_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){-1, 1});
+                    if (test_piece == BLACK_BISHOP ||
+                        test_piece == BLACK_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){-1, 0});
+                    if (test_piece == BLACK_ROOK || test_piece == BLACK_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){-1, -1});
+                    if (test_piece == BLACK_BISHOP ||
+                        test_piece == BLACK_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){0, -1});
+                    if (test_piece == BLACK_ROOK || test_piece == BLACK_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){1, -1});
+                    if (test_piece == BLACK_BISHOP ||
+                        test_piece == BLACK_QUEEN) {
+                        continue;
+                    }
+
+                    bool invalid = false;
+                    for (int i = 0; i < 8; i++) {
+                        pos.row = knight_moves[i].row + board_pos.row;
+                        pos.col = knight_moves[i].col + board_pos.col;
+
+                        if (piece_at(state, pos.row, pos.col) == BLACK_KNIGHT) {
+                            invalid = true;
+                            break;
+                        }
+                    }
+                    if (invalid) {
+                        continue;
+                    }
+                } else {
+                    if (piece_at(state, board_pos.row - 1, board_pos.col + 1) ==
+                        WHITE_PAWN) {
+                        continue;
+                    }
+
+                    if (piece_at(state, board_pos.row - 1, board_pos.col - 1) ==
+                        WHITE_PAWN) {
+                        continue;
+                    }
+
+                    Piece test_piece;
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){1, 0});
+                    if (test_piece == WHITE_ROOK || test_piece == WHITE_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){1, 1});
+                    if (test_piece == WHITE_BISHOP ||
+                        test_piece == WHITE_QUEEN) {
+                        printf("yes");
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){0, 1});
+                    if (test_piece == WHITE_ROOK || test_piece == WHITE_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){-1, 1});
+                    if (test_piece == WHITE_BISHOP ||
+                        test_piece == WHITE_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){-1, 0});
+                    if (test_piece == WHITE_ROOK || test_piece == WHITE_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){-1, -1});
+                    if (test_piece == WHITE_BISHOP ||
+                        test_piece == WHITE_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){0, -1});
+                    if (test_piece == WHITE_ROOK || test_piece == WHITE_QUEEN) {
+                        continue;
+                    }
+
+                    test_piece = piece_in_direction(state, board_pos,
+                                                    (PieceLocation){1, -1});
+                    if (test_piece == WHITE_BISHOP ||
+                        test_piece == WHITE_QUEEN) {
+                        continue;
+                    }
+
+                    bool invalid = false;
+                    for (int i = 0; i < 8; i++) {
+                        pos.row = knight_moves[i].row + board_pos.row;
+                        pos.col = knight_moves[i].col + board_pos.col;
+
+                        if (piece_at(state, pos.row, pos.col) == WHITE_KNIGHT) {
+                            invalid = true;
+                            break;
+                        }
+                    }
+                    if (invalid) {
+                        continue;
+                    }
+                }
+
+                utarray_push_back(moves, &board_pos);
+            }
         }
-
-        pos.row = prow + 1;
-        pos.col = pcol;
-        // if () {
-
-        // }
-        break;
-    case INVALID:
-    case NONE:
+    default:
         break;
     }
 
