@@ -78,6 +78,8 @@ typedef struct GameState {
 
         bool white_to_move, view_as_white;
 
+        bool white_king_moved, black_king_moved;
+
         PieceCount taken_white_pieces, taken_black_pieces;
     } game;
 

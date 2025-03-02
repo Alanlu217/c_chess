@@ -8,6 +8,13 @@
 
 int main() {
     GameState state;
+
+    state.game.valid_moves_icd =
+        (UT_icd){sizeof(PieceLocation), NULL, NULL, NULL};
+    state.game.selected_piece_valid_moves = NULL;
+    utarray_new(state.game.selected_piece_valid_moves,
+                &state.game.valid_moves_icd);
+
     game_screen_init(&state);
     start_scene_init(&state);
 
@@ -16,12 +23,6 @@ int main() {
 
     state.window_x = 1000;
     state.window_y = 1000;
-
-    state.game.valid_moves_icd =
-        (UT_icd){sizeof(PieceLocation), NULL, NULL, NULL};
-    state.game.selected_piece_valid_moves = NULL;
-    utarray_new(state.game.selected_piece_valid_moves,
-                &state.game.valid_moves_icd);
 
     if (conf_load(&state.conf) != 0) {
         return 1;
@@ -63,8 +64,12 @@ int main() {
             game_screen_update(&state);
             game_screen_render(&state);
 
-            if (IsKeyPressed(KEY_R)) {
+            if (IsKeyPressed(KEY_F)) {
                 state.game.view_as_white = !state.game.view_as_white;
+            }
+
+            if (IsKeyPressed(KEY_R)) {
+                reset_board(&state);
             }
             break;
         case END_MENU:

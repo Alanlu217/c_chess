@@ -11,6 +11,8 @@
 PieceCount newPieceCount() { return (PieceCount){0, 0, 0, 0, 0, 0}; }
 
 void reset_board(GameState *state) {
+    state->game.is_piece_selected = false;
+
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
             state->game.board[row][col] = NONE;
@@ -43,12 +45,15 @@ void reset_board(GameState *state) {
     state->game.white_to_move = true;
     state->game.view_as_white = true;
 
+    state->game.white_king_moved = false;
+    state->game.black_king_moved = false;
+
     state->game.last_move = (PieceMove){.piece = NONE};
 
     state->game.taken_white_pieces = newPieceCount();
     state->game.taken_black_pieces = newPieceCount();
 
-    state->game.selected_piece_valid_moves = NULL;
+    utarray_clear(state->game.selected_piece_valid_moves);
 }
 
 float calc_game_padding(const GameState *state) {
@@ -865,6 +870,7 @@ UT_array *gen_valid_moves(UT_array *moves, GameState *state,
                 utarray_push_back(moves, &board_pos);
             }
         }
+        break;
     default:
         break;
     }
@@ -924,10 +930,7 @@ void next_turn(GameState *state) {
     deselect(state);
 }
 
-void game_screen_init(GameState *state) {
-    reset_board(state);
-    state->game.is_piece_selected = false;
-}
+void game_screen_init(GameState *state) { reset_board(state); }
 
 void load_textures(GameState *state) {
     state->textures.board_texture = LoadTexture("assets/board.png");
