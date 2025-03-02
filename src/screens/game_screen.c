@@ -4,6 +4,7 @@
 #include "state.h"
 #include "utarray.h"
 #include "win.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -41,6 +42,8 @@ void reset_board(GameState *state) {
 
     state->game.white_to_move = true;
     state->game.view_as_white = true;
+
+    state->game.last_move = (PieceMove){.piece = NONE};
 
     state->game.taken_white_pieces = newPieceCount();
     state->game.taken_black_pieces = newPieceCount();
@@ -668,6 +671,49 @@ bool move_results_in_check(GameState *state, PieceLocation from,
     }
 }
 
+bool is_piece_move_same(PieceMove move1, PieceMove move2) {
+    return (move1.piece == move2.piece) &&
+           (move1.after.row == move2.after.row) &&
+           (move1.after.col == move2.after.col) &&
+           (move1.before.row == move2.before.row) &&
+           (move1.before.col == move2.before.col);
+}
+
+bool en_passant_possible(const GameState *state, bool for_white,
+                         PieceLocation pos, int check_col) {
+    if (for_white) {
+        if (pos.row != 4) {
+            return false;
+        }
+
+        if (piece_at(state, pos.row, check_col) == BLACK_PAWN &&
+            is_piece_move_same(
+                state->game.last_move,
+                (PieceMove){
+                    .piece = BLACK_PAWN,
+                    .after = (PieceLocation){.row = pos.row, .col = check_col},
+                    .before = {.row = 6, .col = check_col}})) {
+            return true;
+        }
+    } else {
+        if (pos.row != 3) {
+            return false;
+        }
+
+        if (piece_at(state, pos.row, check_col) == WHITE_PAWN &&
+            is_piece_move_same(
+                state->game.last_move,
+                (PieceMove){
+                    .piece = WHITE_PAWN,
+                    .after = (PieceLocation){.row = pos.row, .col = check_col},
+                    .before = {.row = 1, .col = check_col}})) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 UT_array *gen_valid_moves(UT_array *moves, GameState *state,
                           PieceSelection piece) {
     int prow, pcol;
@@ -692,6 +738,22 @@ UT_array *gen_valid_moves(UT_array *moves, GameState *state,
             piece_at(state, prow + forwards * 2, pcol) == NONE) {
             pos.row = prow + forwards * 2;
             pos.col = pcol;
+            utarray_push_back(moves, &pos);
+        }
+
+        if (en_passant_possible(state, white,
+                                (PieceLocation){.row = prow, .col = pcol},
+                                pcol - 1)) {
+            pos.row = prow + forwards;
+            pos.col = pcol - 1;
+            utarray_push_back(moves, &pos);
+        }
+
+        if (en_passant_possible(state, white,
+                                (PieceLocation){.row = prow, .col = pcol},
+                                pcol + 1)) {
+            pos.row = prow + forwards;
+            pos.col = pcol + 1;
             utarray_push_back(moves, &pos);
         }
 
@@ -893,6 +955,7 @@ int move_piece(GameState *state, PieceLocation pos) {
         state->game.board[state->game.selected_piece.pos.row]
                          [state->game.selected_piece.pos.col] = NONE;
 
+        bool piece_taken = true;
         switch (state->game.board[pos.row][pos.col]) {
         case WHITE_PAWN:
             state->game.taken_white_pieces.pawn += 1;
@@ -925,9 +988,24 @@ int move_piece(GameState *state, PieceLocation pos) {
             state->game.taken_black_pieces.queen += 1;
             break;
         default:
+            piece_taken = false;
             break;
         }
         state->game.board[pos.row][pos.col] = state->game.selected_piece.piece;
+        state->game.last_move =
+            (PieceMove){.piece = state->game.selected_piece.piece,
+                        .before = state->game.selected_piece.pos,
+                        pos};
+        if ((state->game.selected_piece.piece == WHITE_PAWN ||
+             state->game.selected_piece.piece == BLACK_PAWN) &&
+            !piece_taken && pos.col != state->game.selected_piece.pos.col) {
+            if (state->game.selected_piece.piece == WHITE_PAWN) {
+                state->game.taken_black_pieces.pawn += 1;
+            } else {
+                state->game.taken_white_pieces.pawn += 1;
+            }
+            set_piece(state, NONE, state->game.selected_piece.pos.row, pos.col);
+        }
 
         state->game.is_piece_selected = false;
         next_turn(state);

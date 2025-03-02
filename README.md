@@ -3,7 +3,7 @@
 ## TODO
 
  - [ ] Queen
- - [ ] En passent
+ - [x] En passent
  - [ ] Castling
  - [x] Checking for King Check when validating moves
  - [x] Show taken pieces

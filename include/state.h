@@ -41,6 +41,11 @@ typedef struct PieceCount {
     int pawn, bishop, knight, rook, queen, king;
 } PieceCount;
 
+typedef struct PieceMove {
+    Piece piece;
+    PieceLocation before, after;
+} PieceMove;
+
 typedef enum {
     START_MENU,
     GAME,
@@ -69,6 +74,7 @@ typedef struct GameState {
         PieceSelection selected_piece;
         UT_icd valid_moves_icd;
         UT_array *selected_piece_valid_moves;
+        PieceMove last_move;
 
         bool white_to_move, view_as_white;
 
