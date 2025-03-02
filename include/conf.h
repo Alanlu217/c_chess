@@ -6,6 +6,7 @@ typedef struct Conf {
     float game_padding_percent;
     float board_padding;
     float piece_scale;
+    float taken_piece_scale;
 
     struct {
         Vector2 white_pawn;
@@ -35,6 +36,10 @@ typedef struct Conf {
         Color color;
         float width;
     } piece_selection_box;
+
+    struct {
+        float x_pc, y_pc, y_pc_factor;
+    } taken_piece_offsets;
 } Conf;
 
 int conf_load(Conf *conf);

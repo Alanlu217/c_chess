@@ -28,6 +28,13 @@ int conf_load(Conf *conf) {
     }
     conf->piece_scale = piece_scale.u.d;
 
+    toml_value_t taken_piece_scale =
+        toml_table_double(board, "taken_piece_scale");
+    if (!taken_piece_scale.ok) {
+        return 1;
+    }
+    conf->taken_piece_scale = taken_piece_scale.u.d;
+
     // Get piece offsets
     {
         toml_table_t *white_offsets =
@@ -303,6 +310,30 @@ int conf_load(Conf *conf) {
         return 1;
     }
     conf->piece_selection_box.width = piece_selection_width.u.d;
+
+    toml_table_t *taken_piece_offsets =
+        toml_table_table(tb, "taken_piece_offsets");
+
+    toml_value_t taken_piece_offets_x =
+        toml_table_double(taken_piece_offsets, "x");
+    if (!taken_piece_offets_x.ok) {
+        return 1;
+    }
+    conf->taken_piece_offsets.x_pc = taken_piece_offets_x.u.d;
+
+    toml_value_t taken_piece_offets_y =
+        toml_table_double(taken_piece_offsets, "y");
+    if (!taken_piece_offets_y.ok) {
+        return 1;
+    }
+    conf->taken_piece_offsets.y_pc = taken_piece_offets_y.u.d;
+
+    toml_value_t taken_piece_offets_y_factor =
+        toml_table_double(taken_piece_offsets, "y_factor");
+    if (!taken_piece_offets_y_factor.ok) {
+        return 1;
+    }
+    conf->taken_piece_offsets.y_pc_factor = taken_piece_offets_y_factor.u.d;
 
     toml_free(tb);
 

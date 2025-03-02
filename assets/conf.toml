@@ -2,6 +2,7 @@
 padding_pc = 0.12
 edge_padding = 1.5
 piece_scale = 0.004
+taken_piece_scale = 0.001
 
 [white_piece_offsets]
 pawn = { x = 0.0055, y = 0 }
@@ -28,3 +29,8 @@ width = 4
 [piece_selection]
 color = { r = 0, g = 255, b = 0, a = 255 }
 width = 5
+
+[taken_piece_offsets]
+x = 0.08
+y = 0.15
+y_factor = 0.04

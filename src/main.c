@@ -12,7 +12,7 @@ int main() {
     start_scene_init(&state);
 
     state.running = true;
-    state.scene = START_MENU;
+    state.scene = GAME;
 
     state.window_x = 1000;
     state.window_y = 1000;

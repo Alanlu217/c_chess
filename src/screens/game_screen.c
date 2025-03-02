@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <time.h>
 
+PieceCount newPieceCount() { return (PieceCount){0, 0, 0, 0, 0, 0}; }
+
 void reset_board(GameState *state) {
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
@@ -39,6 +41,9 @@ void reset_board(GameState *state) {
 
     state->game.white_to_move = true;
     state->game.view_as_white = true;
+
+    state->game.taken_white_pieces = newPieceCount();
+    state->game.taken_black_pieces = newPieceCount();
 
     state->game.selected_piece_valid_moves = NULL;
 }
@@ -88,82 +93,241 @@ Rectangle piece_coords_to_bounding_box(const GameState *state, int row,
                        .height = square_size};
 }
 
+Piece piece_at(const GameState *state, int row, int col) {
+    if (row < 0 || row > 7 || col < 0 || col > 7) {
+        return INVALID;
+    }
+
+    return state->game.board[row][col];
+}
+
+typedef struct PieceRenderConf {
+    const Texture2D *tex;
+    Vector2 offset;
+} PieceRenderConf;
+
+void draw_piece(const GameState *state, Piece piece, float scale, Vector2 pos) {
+    const Texture2D *tex;
+    Vector2 offset;
+
+    switch (piece) {
+    case WHITE_PAWN:
+        tex = &state->textures.white.pawn;
+        offset = state->conf.piece_offsets.white_pawn;
+        break;
+    case WHITE_BISHOP:
+        tex = &state->textures.white.bishop;
+        offset = state->conf.piece_offsets.white_bishop;
+        break;
+    case WHITE_KNIGHT:
+        tex = &state->textures.white.knight;
+        offset = state->conf.piece_offsets.white_knight;
+        break;
+    case WHITE_ROOK:
+        tex = &state->textures.white.rook;
+        offset = state->conf.piece_offsets.white_rook;
+        break;
+    case WHITE_QUEEN:
+        tex = &state->textures.white.queen;
+        offset = state->conf.piece_offsets.white_queen;
+        break;
+    case WHITE_KING:
+        tex = &state->textures.white.king;
+        offset = state->conf.piece_offsets.white_king;
+        break;
+    case BLACK_PAWN:
+        tex = &state->textures.black.pawn;
+        offset = state->conf.piece_offsets.black_pawn;
+        break;
+    case BLACK_BISHOP:
+        tex = &state->textures.black.bishop;
+        offset = state->conf.piece_offsets.black_bishop;
+        break;
+    case BLACK_KNIGHT:
+        tex = &state->textures.black.knight;
+        offset = state->conf.piece_offsets.black_knight;
+        break;
+    case BLACK_ROOK:
+        tex = &state->textures.black.rook;
+        offset = state->conf.piece_offsets.black_rook;
+        break;
+    case BLACK_QUEEN:
+        tex = &state->textures.black.queen;
+        offset = state->conf.piece_offsets.black_queen;
+        break;
+    case BLACK_KING:
+        tex = &state->textures.black.king;
+        offset = state->conf.piece_offsets.black_king;
+        break;
+    default:
+        break;
+    }
+
+    offset.x *= scale / ((float)state->win_size * state->conf.piece_scale);
+    offset.y *= scale / ((float)state->win_size * state->conf.piece_scale);
+
+    DrawTexturePro(
+        *tex,
+        (Rectangle){.x = 0, .y = 0, .height = tex->height, .width = tex->width},
+        (Rectangle){.x = pos.x + offset.x * state->win_size,
+                    .y = pos.y + offset.y * state->win_size,
+                    .height = tex->height * scale,
+                    .width = tex->width * scale},
+        (Vector2){.x = ((float)tex->height * scale) / 2,
+                  .y = ((float)tex->width * scale) / 2},
+        0, WHITE);
+}
+
 void draw_pieces(const GameState *state) {
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
-            Texture2D tex;
-            Vector2 offset;
-
-            switch (state->game.board[row][col]) {
-            case WHITE_PAWN:
-                tex = state->textures.white.pawn;
-                offset = state->conf.piece_offsets.white_pawn;
-                break;
-            case WHITE_BISHOP:
-                tex = state->textures.white.bishop;
-                offset = state->conf.piece_offsets.white_bishop;
-                break;
-            case WHITE_KNIGHT:
-                tex = state->textures.white.knight;
-                offset = state->conf.piece_offsets.white_knight;
-                break;
-            case WHITE_ROOK:
-                tex = state->textures.white.rook;
-                offset = state->conf.piece_offsets.white_rook;
-                break;
-            case WHITE_QUEEN:
-                tex = state->textures.white.queen;
-                offset = state->conf.piece_offsets.white_queen;
-                break;
-            case WHITE_KING:
-                tex = state->textures.white.king;
-                offset = state->conf.piece_offsets.white_king;
-                break;
-            case BLACK_PAWN:
-                tex = state->textures.black.pawn;
-                offset = state->conf.piece_offsets.black_pawn;
-                break;
-            case BLACK_BISHOP:
-                tex = state->textures.black.bishop;
-                offset = state->conf.piece_offsets.black_bishop;
-                break;
-            case BLACK_KNIGHT:
-                tex = state->textures.black.knight;
-                offset = state->conf.piece_offsets.black_knight;
-                break;
-            case BLACK_ROOK:
-                tex = state->textures.black.rook;
-                offset = state->conf.piece_offsets.black_rook;
-                break;
-            case BLACK_QUEEN:
-                tex = state->textures.black.queen;
-                offset = state->conf.piece_offsets.black_queen;
-                break;
-            case BLACK_KING:
-                tex = state->textures.black.king;
-                offset = state->conf.piece_offsets.black_king;
-                break;
-            default:
-                continue;
-            }
-
             const Vector2 pos =
                 game_to_win(state, piece_coords_to_game(state, row, col));
 
             float scale = (float)state->win_size * state->conf.piece_scale;
 
-            DrawTexturePro(
-                tex,
-                (Rectangle){
-                    .x = 0, .y = 0, .height = tex.height, .width = tex.width},
-                (Rectangle){.x = pos.x + offset.x * state->win_size,
-                            .y = pos.y + offset.y * state->win_size,
-                            .height = tex.height * scale,
-                            .width = tex.width * scale},
-                (Vector2){.x = ((float)tex.height * scale) / 2,
-                          .y = ((float)tex.width * scale) / 2},
-                0, WHITE);
+            draw_piece(state, piece_at(state, row, col), scale, pos);
         }
+    }
+}
+
+int calc_points(const GameState *state, bool for_white) {
+    int points = 0;
+    if (for_white) {
+        points += state->game.taken_black_pieces.pawn;
+        points += state->game.taken_black_pieces.bishop * 3;
+        points += state->game.taken_black_pieces.knight * 3;
+        points += state->game.taken_black_pieces.rook * 5;
+        points += state->game.taken_black_pieces.queen * 8;
+    } else {
+        points += state->game.taken_white_pieces.pawn;
+        points += state->game.taken_white_pieces.bishop * 3;
+        points += state->game.taken_white_pieces.knight * 3;
+        points += state->game.taken_white_pieces.rook * 5;
+        points += state->game.taken_white_pieces.queen * 8;
+    }
+
+    return points;
+}
+
+int calc_points_diff(const GameState *state, bool for_white) {
+    int white = calc_points(state, true);
+    int black = calc_points(state, false);
+
+    if (for_white) {
+        return white - black;
+    } else {
+        return black - white;
+    }
+}
+
+void draw_taken_pieces(const GameState *state) {
+    float scale = (float)state->win_size * state->conf.piece_scale * 0.5;
+
+    int points_diff_white = calc_points_diff(state, true);
+
+    int dir = (state->game.view_as_white) ? 1 : -1;
+
+    Vector2 pos;
+    if (state->game.view_as_white) {
+        pos.x = (1 - state->conf.taken_piece_offsets.x_pc) * state->win_size;
+        pos.y = state->conf.taken_piece_offsets.y_pc * state->win_size;
+    } else {
+        pos.x = state->conf.taken_piece_offsets.x_pc * state->win_size;
+        pos.y = (1 - state->conf.taken_piece_offsets.y_pc) * state->win_size;
+    }
+
+    pos = game_to_win(state, pos);
+
+    for (int i = 0; i < state->game.taken_white_pieces.pawn; i++) {
+        draw_piece(state, WHITE_PAWN, scale, pos);
+
+        pos.y +=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_white_pieces.bishop; i++) {
+        draw_piece(state, WHITE_BISHOP, scale, pos);
+
+        pos.y +=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_white_pieces.rook; i++) {
+        draw_piece(state, WHITE_ROOK, scale, pos);
+
+        pos.y +=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_white_pieces.queen; i++) {
+        draw_piece(state, WHITE_QUEEN, scale, pos);
+
+        pos.y +=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_white_pieces.king; i++) {
+        draw_piece(state, WHITE_KING, scale, pos);
+
+        pos.y +=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    if (points_diff_white < 0) {
+        char buffer[5];
+        sprintf(buffer, "+%d", abs(points_diff_white));
+
+        int font_size = calc_font_size(25, state);
+        float offset = MeasureText(buffer, font_size);
+
+        DrawText(buffer, pos.x - offset / 2, pos.y - (float)font_size / 2,
+                 font_size, WHITE);
+    }
+
+    if (!state->game.view_as_white) {
+        pos.x = (1 - state->conf.taken_piece_offsets.x_pc) * state->win_size;
+        pos.y = state->conf.taken_piece_offsets.y_pc * state->win_size;
+    } else {
+        pos.x = state->conf.taken_piece_offsets.x_pc * state->win_size;
+        pos.y = (1 - state->conf.taken_piece_offsets.y_pc) * state->win_size;
+    }
+
+    pos = game_to_win(state, pos);
+    for (int i = 0; i < state->game.taken_black_pieces.pawn; i++) {
+        draw_piece(state, BLACK_PAWN, scale, pos);
+
+        pos.y -=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_black_pieces.bishop; i++) {
+        draw_piece(state, BLACK_BISHOP, scale, pos);
+
+        pos.y -=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_black_pieces.rook; i++) {
+        draw_piece(state, BLACK_ROOK, scale, pos);
+
+        pos.y -=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_black_pieces.queen; i++) {
+        draw_piece(state, BLACK_QUEEN, scale, pos);
+
+        pos.y -=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_black_pieces.king; i++) {
+        draw_piece(state, BLACK_KING, scale, pos);
+
+        pos.y -=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    if (points_diff_white > 0) {
+        char buffer[5];
+        sprintf(buffer, "+%d", abs(points_diff_white));
+
+        int font_size = calc_font_size(25, state);
+        float offset = MeasureText(buffer, font_size);
+
+        DrawText(buffer, pos.x - offset / 2, pos.y - (float)font_size / 2,
+                 font_size, WHITE);
     }
 }
 
@@ -197,6 +361,7 @@ void draw_board(const GameState *state) {
              turn_text_pos.y - (float)font_size / 2, font_size, WHITE);
 
     draw_pieces(state);
+    draw_taken_pieces(state);
 }
 
 bool is_white(Piece piece) {
@@ -229,14 +394,6 @@ bool is_black(Piece piece) {
         return false;
         break;
     }
-}
-
-Piece piece_at(GameState *state, int row, int col) {
-    if (row < 0 || row > 7 || col < 0 || col > 7) {
-        return INVALID;
-    }
-
-    return state->game.board[row][col];
 }
 
 Piece set_piece(GameState *state, Piece piece, int row, int col) {
