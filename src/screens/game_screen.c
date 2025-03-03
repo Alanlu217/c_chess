@@ -42,6 +42,9 @@ void reset_board(GameState *state) {
     state->game.board[7][6] = BLACK_KNIGHT;
     state->game.board[7][7] = BLACK_ROOK;
 
+    state->game.promoting =
+        (PieceSelection){.piece = NONE, .pos.row = 0, .pos.col = 0};
+
     state->game.white_to_move = true;
     state->game.view_as_white = true;
 
@@ -360,17 +363,19 @@ void draw_board(const GameState *state) {
         game_to_win(state, (Vector2){.x = (float)state->win_size / 2,
                                      .y = game_padding / 2});
 
-    char text[50];
-    if (state->game.white_to_move) {
-        sprintf(text, "White to play");
-    } else {
-        sprintf(text, "Black to play");
-    }
+    if (state->game.promoting.piece == NONE) {
+        char text[50];
+        if (state->game.white_to_move) {
+            sprintf(text, "White to play");
+        } else {
+            sprintf(text, "Black to play");
+        }
 
-    int font_size = calc_font_size(60, state);
-    float offset = MeasureText(text, font_size);
-    DrawText(text, turn_text_pos.x - offset / 2,
-             turn_text_pos.y - (float)font_size / 2, font_size, WHITE);
+        int font_size = calc_font_size(60, state);
+        float offset = MeasureText(text, font_size);
+        DrawText(text, turn_text_pos.x - offset / 2,
+                 turn_text_pos.y - (float)font_size / 2, font_size, WHITE);
+    }
 
     draw_pieces(state);
     draw_taken_pieces(state);
@@ -450,6 +455,82 @@ Piece piece_in_direction(GameState *state, PieceLocation pos,
         if (piece != NONE) {
             return piece;
         }
+    }
+}
+
+void draw_update_promotion_selection(GameState *state) {
+    Button queen =
+        (Button){.pos = state->conf.promotion_selection.queen,
+                 .size = (Vector2){.x = state->conf.promotion_selection.size,
+                                   .y = state->conf.promotion_selection.size},
+                 .text = ""};
+    Button rook =
+        (Button){.pos = state->conf.promotion_selection.rook,
+                 .size = (Vector2){.x = state->conf.promotion_selection.size,
+                                   .y = state->conf.promotion_selection.size},
+                 .text = ""};
+    Button bishop =
+        (Button){.pos = state->conf.promotion_selection.bishop,
+                 .size = (Vector2){.x = state->conf.promotion_selection.size,
+                                   .y = state->conf.promotion_selection.size},
+                 .text = ""};
+    Button knight =
+        (Button){.pos = state->conf.promotion_selection.knight,
+                 .size = (Vector2){.x = state->conf.promotion_selection.size,
+                                   .y = state->conf.promotion_selection.size},
+                 .text = ""};
+
+    button_draw(&queen, state);
+    button_draw(&rook, state);
+    button_draw(&bishop, state);
+    button_draw(&knight, state);
+
+    float scale = (float)state->win_size * state->conf.piece_scale * 0.8;
+
+    if (state->game.promoting.piece == WHITE_PAWN) {
+        draw_piece(state, WHITE_QUEEN, scale,
+                   pc_to_win(state, state->conf.promotion_selection.queen));
+        draw_piece(state, WHITE_ROOK, scale,
+                   pc_to_win(state, state->conf.promotion_selection.rook));
+        draw_piece(state, WHITE_BISHOP, scale,
+                   pc_to_win(state, state->conf.promotion_selection.bishop));
+        draw_piece(state, WHITE_KNIGHT, scale,
+                   pc_to_win(state, state->conf.promotion_selection.knight));
+    } else {
+        draw_piece(state, BLACK_QUEEN, scale,
+                   pc_to_win(state, state->conf.promotion_selection.queen));
+        draw_piece(state, BLACK_ROOK, scale,
+                   pc_to_win(state, state->conf.promotion_selection.rook));
+        draw_piece(state, BLACK_BISHOP, scale,
+                   pc_to_win(state, state->conf.promotion_selection.bishop));
+        draw_piece(state, BLACK_KNIGHT, scale,
+                   pc_to_win(state, state->conf.promotion_selection.knight));
+    }
+
+    int color_offset = (is_white(state->game.promoting.piece)) ? 0 : 6;
+
+    bool promoted = false;
+
+    if (button_pressed(&queen, state)) {
+        set_piece(state, WHITE_QUEEN + color_offset,
+                  state->game.promoting.pos.row, state->game.promoting.pos.col);
+        promoted = true;
+    } else if (button_pressed(&rook, state)) {
+        set_piece(state, WHITE_ROOK + color_offset,
+                  state->game.promoting.pos.row, state->game.promoting.pos.col);
+        promoted = true;
+    } else if (button_pressed(&bishop, state)) {
+        set_piece(state, WHITE_BISHOP + color_offset,
+                  state->game.promoting.pos.row, state->game.promoting.pos.col);
+        promoted = true;
+    } else if (button_pressed(&knight, state)) {
+        set_piece(state, WHITE_KNIGHT + color_offset,
+                  state->game.promoting.pos.row, state->game.promoting.pos.col);
+        promoted = true;
+    }
+
+    if (promoted) {
+        state->game.promoting.piece = NONE;
     }
 }
 
@@ -1158,6 +1239,15 @@ int move_piece(GameState *state, PieceLocation pos) {
             set_piece(state, NONE, state->game.selected_piece.pos.row, pos.col);
         }
 
+        // Check for queening
+        if (piece == WHITE_PAWN && pos.row == 7) {
+            state->game.promoting =
+                (PieceSelection){.piece = WHITE_PAWN, .pos = pos};
+        } else if (piece == BLACK_PAWN && pos.row == 0) {
+            state->game.promoting =
+                (PieceSelection){.piece = BLACK_PAWN, .pos = pos};
+        }
+
         state->game.is_piece_selected = false;
         next_turn(state);
         return 0;
@@ -1198,8 +1288,12 @@ void update_selection(GameState *state) {
 }
 
 void game_screen_update(GameState *state) {
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        update_selection(state);
+    if (state->game.promoting.piece == NONE) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            update_selection(state);
+        }
+    } else {
+        draw_update_promotion_selection(state);
     }
 }
 

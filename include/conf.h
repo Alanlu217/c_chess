@@ -40,6 +40,11 @@ typedef struct Conf {
     struct {
         float x_pc, y_pc, y_pc_factor;
     } taken_piece_offsets;
+
+    struct {
+        Vector2 queen, rook, bishop, knight;
+        double size;
+    } promotion_selection;
 } Conf;
 
 int conf_load(Conf *conf);

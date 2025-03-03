@@ -34,3 +34,15 @@ width = 5
 x = 0.08
 y = 0.15
 y_factor = 0.04
+
+[promotion_selection]
+size = 0.09
+
+queen_x = 0.45
+queen_y = 0.06
+rook_x = 0.35
+rook_y = 0.06
+bishop_x = 0.55
+bishop_y = 0.06
+knight_x = 0.65
+knight_y = 0.06

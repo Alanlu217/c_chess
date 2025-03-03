@@ -84,6 +84,8 @@ typedef struct GameState {
                 black_h_rook_moved;
         } castling;
 
+        PieceSelection promoting;
+
         PieceCount taken_white_pieces, taken_black_pieces;
     } game;
 

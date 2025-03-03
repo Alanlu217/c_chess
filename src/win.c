@@ -1,6 +1,7 @@
 #include "win.h"
 #include "raylib.h"
 #include "raymath.h"
+#include "screens/button.h"
 
 void update_window_state(GameState *state) {
     state->window_x = GetScreenWidth();
@@ -25,6 +26,11 @@ Vector2 win_to_game(const GameState *state, Vector2 win) {
 
 Vector2 game_to_win(const GameState *state, Vector2 game) {
     return Vector2Add(game, state->win_offset);
+}
+
+Vector2 pc_to_win(const GameState *state, Vector2 pc) {
+    return game_to_win(state, (Vector2){.x = pc.x * state->win_size,
+                                        .y = pc.y * state->win_size});
 }
 
 int calc_font_size(int size, const GameState *state) {

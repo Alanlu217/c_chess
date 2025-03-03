@@ -10,4 +10,6 @@ Vector2 win_to_game(const GameState *state, Vector2 win);
 
 Vector2 game_to_win(const GameState *state, Vector2 game);
 
+Vector2 pc_to_win(const GameState *state, Vector2 pc);
+
 int calc_font_size(int size, const GameState *state);

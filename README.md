@@ -2,7 +2,7 @@
 
 ## TODO
 
- - [ ] Queen
+ - [x] Queen
  - [x] En passent
  - [x] Castling
  - [x] Checking for King Check when validating moves

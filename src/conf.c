@@ -335,6 +335,62 @@ int conf_load(Conf *conf) {
     }
     conf->taken_piece_offsets.y_pc_factor = taken_piece_offets_y_factor.u.d;
 
+    toml_table_t *promotion = toml_table_table(tb, "promotion_selection");
+
+    toml_value_t val = toml_table_double(promotion, "queen_x");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.queen.x = val.u.d;
+
+    val = toml_table_double(promotion, "queen_y");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.queen.y = val.u.d;
+
+    val = toml_table_double(promotion, "rook_x");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.rook.x = val.u.d;
+
+    val = toml_table_double(promotion, "rook_y");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.rook.y = val.u.d;
+
+    val = toml_table_double(promotion, "bishop_x");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.bishop.x = val.u.d;
+
+    val = toml_table_double(promotion, "bishop_y");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.bishop.y = val.u.d;
+
+    val = toml_table_double(promotion, "knight_x");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.knight.x = val.u.d;
+
+    val = toml_table_double(promotion, "knight_y");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.knight.y = val.u.d;
+
+    val = toml_table_double(promotion, "size");
+    if (!val.ok) {
+        return 1;
+    }
+    conf->promotion_selection.size = val.u.d;
+
     toml_free(tb);
 
     return 0;

@@ -61,8 +61,8 @@ int main() {
             start_screen_render(&state);
             break;
         case GAME:
-            game_screen_update(&state);
             game_screen_render(&state);
+            game_screen_update(&state);
 
             if (IsKeyPressed(KEY_F)) {
                 state.game.view_as_white = !state.game.view_as_white;
