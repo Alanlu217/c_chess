@@ -52,6 +52,8 @@ typedef enum {
     END_MENU,
 } Scene;
 
+// [row][col]
+// [0][0] is bottom left, on white side.
 typedef Piece Board[8][8];
 
 typedef struct GameState {
@@ -65,8 +67,6 @@ typedef struct GameState {
     Vector2 win_offset;
     int win_size;
 
-    // [row][col]
-    // [0][0] is bottom left, on white side.
     struct {
         Board board;
 
@@ -78,7 +78,11 @@ typedef struct GameState {
 
         bool white_to_move, view_as_white;
 
-        bool white_king_moved, black_king_moved;
+        struct {
+            bool white_king_moved, black_king_moved;
+            bool white_a_rook_moved, white_h_rook_moved, black_a_rook_moved,
+                black_h_rook_moved;
+        } castling;
 
         PieceCount taken_white_pieces, taken_black_pieces;
     } game;

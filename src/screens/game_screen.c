@@ -45,8 +45,12 @@ void reset_board(GameState *state) {
     state->game.white_to_move = true;
     state->game.view_as_white = true;
 
-    state->game.white_king_moved = false;
-    state->game.black_king_moved = false;
+    state->game.castling.white_king_moved = false;
+    state->game.castling.black_king_moved = false;
+    state->game.castling.white_a_rook_moved = false;
+    state->game.castling.white_h_rook_moved = false;
+    state->game.castling.black_a_rook_moved = false;
+    state->game.castling.black_h_rook_moved = false;
 
     state->game.last_move = (PieceMove){.piece = NONE};
 
@@ -830,6 +834,108 @@ UT_array *gen_valid_moves(UT_array *moves, GameState *state,
         break;
     case WHITE_KING:
     case BLACK_KING:
+        if (white && !state->game.castling.white_king_moved) {
+            if (!state->game.castling.white_h_rook_moved) {
+                bool valid = true;
+                set_piece(state, NONE, 0, 4);
+                for (int col = 4; col < 7; col++) {
+                    if (piece_at(state, 0, col) != NONE) {
+                        valid = false;
+                        break;
+                    }
+
+                    set_piece(state, WHITE_KING, 0, col);
+                    if (is_king_in_check(state, true)) {
+                        valid = false;
+                        set_piece(state, NONE, 0, col);
+                        break;
+                    }
+                    set_piece(state, NONE, 0, col);
+                }
+                set_piece(state, WHITE_KING, 0, 4);
+                if (valid) {
+                    pos.row = 0;
+                    pos.col = 6;
+                    utarray_push_back(moves, &pos);
+                }
+            }
+            if (!state->game.castling.white_a_rook_moved) {
+                bool valid = true;
+                set_piece(state, NONE, 0, 4);
+                for (int col = 4; col > 0; col--) {
+                    if (piece_at(state, 0, col) != NONE) {
+                        valid = false;
+                        break;
+                    }
+
+                    set_piece(state, WHITE_KING, 0, col);
+                    if (is_king_in_check(state, true)) {
+                        valid = false;
+                        set_piece(state, NONE, 0, col);
+                        break;
+                    }
+                    set_piece(state, NONE, 0, col);
+                }
+                set_piece(state, WHITE_KING, 0, 4);
+                if (valid) {
+                    pos.row = 0;
+                    pos.col = 2;
+                    utarray_push_back(moves, &pos);
+                }
+            }
+        }
+
+        if (!white && !state->game.castling.black_king_moved) {
+            if (!state->game.castling.black_h_rook_moved) {
+                bool valid = true;
+                set_piece(state, NONE, 7, 4);
+                for (int col = 4; col < 7; col++) {
+                    if (piece_at(state, 7, col) != NONE) {
+                        valid = false;
+                        break;
+                    }
+
+                    set_piece(state, BLACK_KING, 7, col);
+                    if (is_king_in_check(state, false)) {
+                        valid = false;
+                        set_piece(state, NONE, 7, col);
+                        break;
+                    }
+                    set_piece(state, NONE, 7, col);
+                }
+                set_piece(state, BLACK_KING, 7, 4);
+                if (valid) {
+                    pos.row = 7;
+                    pos.col = 6;
+                    utarray_push_back(moves, &pos);
+                }
+            }
+            if (!state->game.castling.black_a_rook_moved) {
+                bool valid = true;
+                set_piece(state, NONE, 7, 4);
+                for (int col = 4; col > 0; col--) {
+                    if (piece_at(state, 7, col) != NONE) {
+                        valid = false;
+                        break;
+                    }
+
+                    set_piece(state, BLACK_KING, 7, col);
+                    if (is_king_in_check(state, false)) {
+                        valid = false;
+                        set_piece(state, NONE, 7, col);
+                        break;
+                    }
+                    set_piece(state, NONE, 7, col);
+                }
+                set_piece(state, BLACK_KING, 7, 4);
+                if (valid) {
+                    pos.row = 7;
+                    pos.col = 2;
+                    utarray_push_back(moves, &pos);
+                }
+            }
+        }
+
         for (int row = -1; row <= 1; row++) {
             for (int col = -1; col <= 1; col++) {
                 if (row == 0 && col == 0) {
@@ -999,6 +1105,48 @@ int move_piece(GameState *state, PieceLocation pos) {
             (PieceMove){.piece = state->game.selected_piece.piece,
                         .before = state->game.selected_piece.pos,
                         pos};
+
+        // Check if rook or king has moved to validate castling
+        Piece piece = state->game.selected_piece.piece;
+        PieceLocation selected_pos = state->game.selected_piece.pos;
+        if (piece == WHITE_KING) {
+            state->game.castling.white_king_moved = true;
+        } else if (piece == BLACK_KING) {
+            state->game.castling.black_king_moved = true;
+        } else if (piece == WHITE_ROOK) {
+            if (selected_pos.col == 0 && selected_pos.row == 0) {
+                state->game.castling.white_a_rook_moved = true;
+            } else if (selected_pos.col == 7 && selected_pos.row == 0) {
+                state->game.castling.white_h_rook_moved = true;
+            }
+        } else if (piece == BLACK_ROOK) {
+            if (selected_pos.col == 0 && selected_pos.row == 7) {
+                state->game.castling.black_a_rook_moved = true;
+            } else if (selected_pos.col == 7 && selected_pos.row == 7) {
+                state->game.castling.black_h_rook_moved = true;
+            }
+        }
+
+        // Check if rook should also be moved for castling
+        if (piece == WHITE_KING) {
+            if (pos.col - selected_pos.col > 1) {
+                set_piece(state, NONE, 0, 7);
+                set_piece(state, WHITE_ROOK, 0, 5);
+            } else if (selected_pos.col - pos.col > 1) {
+                set_piece(state, NONE, 0, 0);
+                set_piece(state, WHITE_ROOK, 0, 3);
+            }
+        } else if (piece == BLACK_KING) {
+            if (pos.col - selected_pos.col > 1) {
+                set_piece(state, NONE, 7, 7);
+                set_piece(state, BLACK_ROOK, 7, 5);
+            } else if (selected_pos.col - pos.col > 1) {
+                set_piece(state, NONE, 7, 0);
+                set_piece(state, BLACK_ROOK, 7, 3);
+            }
+        }
+
+        // Check if pawn should be removed for en passant
         if ((state->game.selected_piece.piece == WHITE_PAWN ||
              state->game.selected_piece.piece == BLACK_PAWN) &&
             !piece_taken && pos.col != state->game.selected_piece.pos.col) {
