@@ -175,7 +175,7 @@ void draw_piece(const GameState *state, Piece piece, float scale, Vector2 pos) {
         offset = state->conf.piece_offsets.black_king;
         break;
     default:
-        break;
+        return;
     }
 
     offset.x *= scale / ((float)state->win_size * state->conf.piece_scale);
@@ -1298,8 +1298,6 @@ void game_screen_update(GameState *state) {
 }
 
 void game_screen_render(const GameState *state) {
-    draw_pieces(state);
-
     draw_board(state);
 
     if (state->game.is_piece_selected) {
