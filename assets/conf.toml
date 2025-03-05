@@ -28,7 +28,7 @@ width = 4
 
 [piece_selection]
 color = { r = 0, g = 255, b = 0, a = 255 }
-width = 5
+width = 8
 
 [taken_piece_offsets]
 x = 0.08
