@@ -3,6 +3,7 @@
 #include "screens/game_screen.h"
 #include "screens/start_screen.h"
 #include "state.h"
+#include "stdio.h"
 #include "utarray.h"
 #include "win.h"
 
@@ -25,10 +26,12 @@ int main() {
     state.window_y = 1000;
 
     if (conf_load(&state.conf) != 0) {
+        printf("assets/conf.toml file missing\n");
         return 1;
     }
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    SetTraceLogLevel(LOG_ERROR);
     InitWindow(state.window_x, state.window_y, "chess");
     SetExitKey(KEY_NULL);
 

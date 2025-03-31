@@ -6,6 +6,10 @@ int conf_load(Conf *conf) {
     char errbuf[200];
 
     FILE *fp = fopen("assets/conf.toml", "r");
+    if (!fp) {
+        return 1;
+    }
+
     toml_table_t *tb = toml_parse_file(fp, errbuf, sizeof(errbuf));
 
     toml_table_t *board = toml_table_table(tb, "board");
