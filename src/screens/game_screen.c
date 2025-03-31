@@ -266,6 +266,12 @@ void draw_taken_pieces(const GameState *state) {
         pos.y +=
             state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
     }
+    for (int i = 0; i < state->game.taken_white_pieces.knight; i++) {
+        draw_piece(state, WHITE_KNIGHT, scale, pos);
+
+        pos.y +=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
     for (int i = 0; i < state->game.taken_white_pieces.rook; i++) {
         draw_piece(state, WHITE_ROOK, scale, pos);
 
@@ -314,6 +320,12 @@ void draw_taken_pieces(const GameState *state) {
         draw_piece(state, BLACK_BISHOP, scale, pos);
 
         pos.y -=
+            state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
+    }
+    for (int i = 0; i < state->game.taken_black_pieces.knight; i++) {
+        draw_piece(state, BLACK_KNIGHT, scale, pos);
+
+        pos.y +=
             state->conf.taken_piece_offsets.y_pc_factor * state->win_size * dir;
     }
     for (int i = 0; i < state->game.taken_black_pieces.rook; i++) {
