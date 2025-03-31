@@ -11,3 +11,7 @@ Taskfile.yml
 .clangd
 
 compile_commands.json
+
+.xmake
+
+build/
